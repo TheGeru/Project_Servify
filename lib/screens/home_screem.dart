@@ -8,9 +8,7 @@ class HomeScreem extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Servify'),
-      ),
+      appBar: AppBar(title: const Text('Servify')),
       body: ListView(
         children: const [
           CardContainer(
@@ -18,11 +16,25 @@ class HomeScreem extends StatelessWidget {
             categoria: 'Servicios',
             descripcion: 'Ofrecemos servicios de carpintería a medida.',
           ),
-          
+
           CardContainer(
             titulo: 'Plomería',
             categoria: 'Servicios',
             descripcion: 'Reparación y mantenimiento de sistemas de plomería.',
+          ),
+
+          CardContainer(
+            titulo: 'Electricidad',
+            categoria: 'Servicios',
+            descripcion:
+                'Instalación y reparación de sistemas eléctricos de tu casa u oficina.',
+          ),
+
+          CardContainer(
+            titulo: 'Jardinería',
+            categoria: 'Servicios',
+            descripcion:
+                'Mantenimiento y diseño de jardines para tus áreas verdes.',
           ),
         ],
       ),
