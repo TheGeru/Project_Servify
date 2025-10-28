@@ -58,18 +58,13 @@ class _HomeScreenState extends State<HomeScreen> {
               : (_selectedIndex == 1 ? 'Historial' : 'Perfil'),
         ),
       ),
-
-      // Muestra el widget de la pestaña seleccionada
       body: _widgetOptions.elementAt(_selectedIndex),
-
-      // El FloatingActionButton solo es visible en la pestaña de Servicios (índice 0)
       floatingActionButton: _selectedIndex == 0
           ? FloatingActionButton(
               onPressed: () => navigateToAddService(context),
               child: const Icon(Icons.add),
             )
-          : null, // Ocultar si no es la pestaña de Servicios
-      // BottomNavigationBar para la navegación principal
+          : null,
       bottomNavigationBar: BottomNavigationBar(
         items: const <BottomNavigationBarItem>[
           BottomNavigationBarItem(
@@ -125,6 +120,12 @@ class _ServicesList extends StatelessWidget {
           descripcion:
               'Mantenimiento y diseño de jardines para tus áreas verdes.',
           onTap: () => navigateToServiceDetail(context, 'Jardinería'),
+        ),
+        CardContainer(
+          titulo: 'Plomería',
+          categoria: 'Servicios',
+          descripcion: 'Mantenimiento y diseño de tus tuberías de tu casa.',
+          onTap: () => navigateToServiceDetail(context, 'Plomería'),
         ),
         const SizedBox(height: 80),
       ],
