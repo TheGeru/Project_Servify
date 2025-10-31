@@ -4,14 +4,6 @@ class ServiceDetailScreen extends StatelessWidget {
   final String serviceTitle;
 
   const ServiceDetailScreen({super.key, required this.serviceTitle});
-  void _onItemTapped(BuildContext context, int index) {
-    if (index == 0) {
-      Navigator.pop(context);
-    } else {
-      Navigator.pop(context);
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -37,26 +29,33 @@ class ServiceDetailScreen extends StatelessWidget {
                 textAlign: TextAlign.center,
                 style: TextStyle(fontSize: 16),
               ),
+              const SizedBox(height: 30),
+              ElevatedButton.icon(
+                onPressed: () {
+                  // Simulamos la acción de contactar
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('Contactando al proveedor...'),
+                    ),
+                  );
+                },
+                icon: const Icon(Icons.contact_mail),
+                label: const Text('CONTACTAR', style: TextStyle(fontSize: 18)),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color.fromARGB(255, 255, 127, 80),
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 40,
+                    vertical: 15,
+                  ),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(30),
+                  ),
+                ),
+              ),
             ],
           ),
         ),
-      ),
-      bottomNavigationBar: BottomNavigationBar(
-        items: const <BottomNavigationBarItem>[
-          BottomNavigationBarItem(
-            icon: Icon(Icons.home_repair_service),
-            label: 'Servicios',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.history),
-            label: 'Historial',
-          ),
-          BottomNavigationBarItem(icon: Icon(Icons.person), label: 'Perfil'),
-        ],
-        currentIndex: 0,
-        selectedItemColor: const Color.fromARGB(255, 31, 122, 158),
-        unselectedItemColor: Colors.grey,
-        onTap: (index) => _onItemTapped(context, index),
       ),
     );
   }

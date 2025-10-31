@@ -12,6 +12,7 @@ class MainApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'Servify',
+      debugShowCheckedModeBanner: false,
       initialRoute: 'home',
       routes: {'home': (_) => const HomeScreen()},
       theme: ThemeData.light().copyWith(
