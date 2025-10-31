@@ -8,7 +8,7 @@ class HistoryScreen extends StatelessWidget {
     return const Center(
       child: Text(
         'Historial de Servicios',
-        style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+        style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.white),
       ),
     );
   }

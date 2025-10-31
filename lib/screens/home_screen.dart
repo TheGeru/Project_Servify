@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
 
 import 'package:project_servify/screens/history_screen.dart';
-import 'package:project_servify/screens/profile_screen.dart';
+import 'package:project_servify/screens/perfil_proveedor_screen.dart';
 
 import 'package:project_servify/screens/service_detail_screen.dart';
 import 'package:project_servify/screens/add_service_screen.dart';
 import 'package:project_servify/widgets/card_container.dart';
+import 'package:project_servify/widgets/menu_bar.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -37,7 +38,7 @@ class _HomeScreenState extends State<HomeScreen> {
     _ServicesList(navigateToServiceDetail: navigateToServiceDetail),
     //Funcion de navegacion a las nuevas pantallas
     const HistoryScreen(),
-    const ProfileScreen(),
+    const PerfilProveedorScreen(),
   ];
 
   // Función para cambiar el índice al presionar una pestaña
@@ -50,13 +51,13 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        // El título cambia dinámicamente según la pestaña seleccionada
-        title: Text(
-          _selectedIndex == 0
-              ? 'Servicios'
-              : (_selectedIndex == 1 ? 'Historial' : 'Perfil'),
-        ),
+      backgroundColor: const Color(0xFF0F3B81),
+      appBar: Menu_Bar(
+        notificationCount: 5,
+        onSearchPressed: () => Navigator.pushNamed(context, '/search'),
+        onNotificationPressed: () =>
+            Navigator.pushNamed(context, '/notifications'),
+        onProfilePressed: () => Navigator.pushNamed(context, '/profile'),
       ),
       body: _widgetOptions.elementAt(_selectedIndex),
       floatingActionButton: _selectedIndex == 0
