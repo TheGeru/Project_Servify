@@ -1,14 +1,18 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'firebase_options.dart';
+
+// Screens
 import 'package:project_servify/screens/home_screen.dart';
 import 'package:project_servify/screens/inicio_usuarios_screen.dart';
 import 'package:project_servify/screens/crear_cuenta_screen.dart';
-import 'package:project_servify/screens/registro_usuario_screen.dart';
-import 'package:project_servify/screens/registro_proveedor_screen.dart';
-import 'package:project_servify/screens/inicio_sesion_usuario.dart';
-import 'package:project_servify/screens/inicio_sesion_proveedor.dart';
 import 'package:project_servify/screens/recuperar_pass_screen.dart';
 
-void main() {
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await Firebase.initializeApp(
+    options: DefaultFirebaseOptions.currentPlatform,
+  );
   runApp(const MainApp());
 }
 
@@ -25,10 +29,6 @@ class MainApp extends StatelessWidget {
         'home': (_) => const HomeScreen(),
         'inicio_usuarios': (_) => const InicioUsuariosScreen(),
         'crear_cuenta': (_) => const CrearCuentaScreen(),
-        'registro_usuario': (_) => const RegistroUsuarioScreen(),
-        'registro_proveedor': (_) => const RegistroProveedorScreen(),
-        'inicio_sesion_usuario': (_) => const InicioSesionUsuario(),
-        'inicio_sesion_proveedor': (_) => const InicioSesionProveedor(),
         'recuperar_pass': (_) => const RecuperarPassScreen(),
       },
       theme: ThemeData.light().copyWith(
