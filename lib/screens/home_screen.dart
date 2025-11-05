@@ -207,39 +207,49 @@ Widget build(BuildContext context) {
           services: allServices,
         ),
         const HistoryScreen(),
+        const PerfilProveedorScreen(),
         // Debes tener una pantalla para el perfil en el índice 2 si lo habilitas
         // const ProfileScreen(), 
       ];
 
       // 3. Devolver el Scaffold con el Drawer dinámico
       return Scaffold(
-        backgroundColor: const Color(0xFF0F3B81),
-        appBar: Menu_Bar(
-          notificationCount: 5,
-          onSearchPressed: () => Navigator.pushNamed(context, '/search'),
-          onNotificationPressed: () =>
-              Navigator.pushNamed(context, '/notifications'),
-          onProfilePressed: () {
-            // Navegación condicional desde el AppBar si lo necesitas
-            if (user != null) {
-              Navigator.pushNamed(context, '/profile');
-            } else {
-              ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Inicia sesión para ver tu perfil')),
-              );
-              Navigator.pushNamed(context, 'inicio_usuarios');
-            }
-          },
-        ),
-        drawer: appDrawer, // 👈 Usamos el Drawer dinámico que acabamos de definir
-        body: widgetOptions.elementAt(_selectedIndex),
-        floatingActionButton: _selectedIndex == 0
-            ? FloatingActionButton(
-                onPressed: () => navigateToAddService(context),
-                child: const Icon(Icons.add),
-              )
-            : null,
-      );
+          backgroundColor: const Color(0xFF0F3B81),
+          appBar: Menu_Bar(
+            // 🛑 CAMBIO CRÍTICO AQUÍ: Pasa el estado de autenticación
+            isAuthenticated: user != null, // Es verdadero si hay un usuario logueado
+            
+            notificationCount: 5,
+            onSearchPressed: () => Navigator.pushNamed(context, '/search'),
+            onNotificationPressed: () =>
+                Navigator.pushNamed(context, '/notifications'),
+            onProfilePressed: () {
+              // Navegación condicional desde el AppBar si lo necesitas
+              if (user != null) {
+                Navigator.pushNamed(context, '/profile');
+              } else {
+                ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Inicia sesión para ver tu perfil')),
+                );
+                Navigator.pushNamed(context, 'inicio_usuarios');
+              }
+            },
+            // Si Menu_Bar maneja la navegación de Login/Signup por defecto, 
+            // no necesitas pasar onLoginPressed ni onSignUpPressed.
+            // Si NO maneja la navegación por defecto, asegúrate de pasarlas así:
+            onLoginPressed: () => Navigator.pushNamed(context, 'inicio_usuarios'),
+            onSignUpPressed: () => Navigator.pushNamed(context, 'crear_cuenta'),
+          ),
+          drawer: appDrawer, // 👈 Usamos el Drawer dinámico que definimos antes
+          body: widgetOptions.elementAt(_selectedIndex),
+          floatingActionButton: _selectedIndex == 0
+              ? FloatingActionButton(
+                  onPressed: () => navigateToAddService(context),
+                  child: const Icon(Icons.add),
+                )
+              : null,
+        );
+
     },
   );
 }

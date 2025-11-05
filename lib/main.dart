@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:project_servify/screens/perfil_usuario_screen.dart';
 import 'firebase_options.dart';
 
 // Screens
@@ -29,6 +30,7 @@ class MainApp extends StatelessWidget {
         'home': (_) => const HomeScreen(),
         'inicio_usuarios': (_) => const InicioUsuariosScreen(),
         'crear_cuenta': (_) => const CrearCuentaScreen(),
+        'perfil': (_) => const PerfilUsuarioScreen(),
         'recuperar_pass': (_) => const RecuperarPassScreen(),
       },
       theme: ThemeData.light().copyWith(

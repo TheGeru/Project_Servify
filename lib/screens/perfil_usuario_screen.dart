@@ -7,9 +7,19 @@ class PerfilUsuarioScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFF0F3B81),
+      // 🛑 1. AGREGAR APPBAR PARA EL BOTÓN DE REGRESO
+      appBar: AppBar(
+        backgroundColor: Colors.transparent, // Fondo transparente
+        elevation: 0, // Sin sombra
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back, color: Colors.white), // Ícono blanco
+          onPressed: () => Navigator.pushReplacementNamed(context, 'home'), // Función de regreso manual
+        ),
+      ),
       body: SingleChildScrollView(
         child: Column(
           children: [
+            // El resto de tu UI
             Container(
               width: double.infinity,
               padding: const EdgeInsets.symmetric(vertical: 20),
@@ -36,6 +46,7 @@ class PerfilUsuarioScreen extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 20),
+            // ... (Contenedor vacío)
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 20),
               child: Container(
@@ -55,6 +66,7 @@ class PerfilUsuarioScreen extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 20),
+            // ... (Contenedor de Información)
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 20),
               child: Container(

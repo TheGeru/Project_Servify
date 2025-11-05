@@ -52,7 +52,7 @@ class Menu_Bar extends StatelessWidget implements PreferredSizeWidget {
           Scaffold.of(context).openDrawer();
         },
       ),
-      title: isAuthenticated ? _buildSearchBar() : null,
+      title: _buildSearchBar(),
       actions: isAuthenticated 
           ? _buildAuthenticatedActions() 
           : _buildUnauthenticatedActions(context),
