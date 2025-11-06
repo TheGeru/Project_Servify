@@ -222,7 +222,7 @@ Widget build(BuildContext context) {
             notificationCount: 5,
             onSearchPressed: () => Navigator.pushNamed(context, '/search'),
             onNotificationPressed: () =>
-                Navigator.pushNamed(context, '/notifications'),
+                Navigator.pushNamed(context, 'notifications'),
             onProfilePressed: () {
               // Navegación condicional desde el AppBar si lo necesitas
               if (user != null) {

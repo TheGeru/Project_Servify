@@ -33,41 +33,75 @@ class _RegistroFormState extends State<RegistroForm> {
   List<String> _oficiosSeleccionados = [];
 
   // Registro con correo
-void _register() async {
-  if (_formKey.currentState!.validate() && _acceptedTerms) {
-    try {
+//void _register() async {
+  //if (_formKey.currentState!.validate() && _acceptedTerms) {
+    //try {
       // Llama a tu AuthService
-      final role = _tipo == TipoUsuario.usuario ? 'user' : 'provider';
-      await widget.authService.registerWithEmail(
-        email: _correoController.text.trim(),
-        password: _passwordController.text.trim(),
-        name: _nombreController.text.trim(),
-        role: role,
-        phone: _telefonoController.text.trim(),
-        description: _descripcionController.text.trim(),
-        oficios: _oficiosSeleccionados,
-      );
+      //final role = _tipo == TipoUsuario.usuario ? 'user' : 'provider';
+      //await widget.authService.registerWithEmail(
+        //email: _correoController.text.trim(),
+        //password: _passwordController.text.trim(),
+        //name: _nombreController.text.trim(),
+        //role: role,
+        //phone: _telefonoController.text.trim(),
+        //description: _descripcionController.text.trim(),
+        //oficios: _oficiosSeleccionados,
+      //);
 
       // Registro exitoso
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Registro exitoso')),
-      );
+      //ScaffoldMessenger.of(context).showSnackBar(
+        //const SnackBar(content: Text('Registro exitoso')),
+      //);
 
       // Redirige a home
-      Navigator.pop(context);
+      //Navigator.pop(context);
+    //} catch (e) {
+      //ScaffoldMessenger.of(context).showSnackBar(
+        //SnackBar(content: Text('Error al registrar: $e')),
+      //);
+    //}
+  //} else if (!_acceptedTerms) {
+    //ScaffoldMessenger.of(context).showSnackBar(
+      //const SnackBar(content: Text('Debes aceptar Términos y Condiciones')),
+    //);
+  //}
+//}
+
+void _register() async {
+  if (_formKey.currentState!.validate() && _acceptedTerms) {
+    // ... (El resto de tu lógica de try/catch)
+    try {
+        // Ejecuta el registro (esto crea el usuario en Firebase Auth)
+        await widget.authService.registerWithEmail(
+            email: _correoController.text.trim(),
+            password: _passwordController.text.trim(),
+            name: _nombreController.text.trim(),
+            role: _tipo == TipoUsuario.usuario ? 'user' : 'provider',
+            // ... (otros campos)
+        );
+
+        // 2. Si LLEGAMOS AQUÍ, es porque el usuario fue creado, aunque Firestore haya fallado.
+        ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Registro exitoso (Sin sincronización con Firestore aún)')),
+        );
+        
+        // 3. Redirige a home
+        Navigator.pop(context);
+        
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error al registrar: $e')),
-      );
+        // Opción 1 (Recomendada): Mostrar el error para saber si es de Auth o de Firestore
+        ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Error: $e. Verifica permisos de Firestore.')),
+        );
     }
   } else if (!_acceptedTerms) {
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(content: Text('Debes aceptar Términos y Condiciones')),
     );
-  }
-}
+  } // 🛑 ¡FALTA LA LLAVE DE CIERRE DEL MÉTODO AQUÍ!
+} 
 
-
+// ...
   // Google Sign-In
   Future<void> _registerWithGoogle() async {
     final role = _tipo == TipoUsuario.usuario ? 'user' : 'provider';

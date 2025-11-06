@@ -8,7 +8,7 @@ import 'package:project_servify/screens/home_screen.dart';
 import 'package:project_servify/screens/inicio_usuarios_screen.dart';
 import 'package:project_servify/screens/crear_cuenta_screen.dart';
 import 'package:project_servify/screens/recuperar_pass_screen.dart';
-
+import 'package:project_servify/screens/notifications_screen.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(
@@ -27,6 +27,7 @@ class MainApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       initialRoute: 'home',
       routes: {
+        'notifications': (_) => const NotificationsScreen(),
         'home': (_) => const HomeScreen(),
         'inicio_usuarios': (_) => const InicioUsuariosScreen(),
         'crear_cuenta': (_) => const CrearCuentaScreen(),
