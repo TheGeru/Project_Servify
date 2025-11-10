@@ -12,7 +12,7 @@ class PerfilUsuarioScreen extends StatelessWidget {
         backgroundColor: Colors.transparent, // Fondo transparente
         elevation: 0, // Sin sombra
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.white), // Ícono blanco
+          icon: const Icon(Icons.arrow_back_ios, color: Colors.white), // Ícono blanco
           onPressed: () => Navigator.pushReplacementNamed(context, 'home'), // Función de regreso manual
         ),
       ),

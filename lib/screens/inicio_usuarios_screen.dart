@@ -63,12 +63,12 @@ class _InicioUsuariosScreenState extends State<InicioUsuariosScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF0F3B81),
+      backgroundColor: const Color.fromARGB(255, 25, 64, 119),
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.white),
+          icon: const Icon(Icons.arrow_back_ios, color: Colors.white),
           onPressed: () => Navigator.pop(context),
         ),
       ),
@@ -109,7 +109,7 @@ class _InicioUsuariosScreenState extends State<InicioUsuariosScreen> {
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
                         const Center(
-                          child: Text("INICIAR SESIÓN",
+                          child: Text("Iniciar Sesion",
                             style: TextStyle(fontSize: 26, fontWeight: FontWeight.bold),
                           ),
                         ),
@@ -118,7 +118,7 @@ class _InicioUsuariosScreenState extends State<InicioUsuariosScreen> {
                         // Email
                         TextFormField(
                           controller: _emailController,
-                          decoration: const InputDecoration(labelText: 'CORREO'),
+                          decoration: const InputDecoration(labelText: 'Correo'),
                           validator: (v) =>
                             v == null || !v.contains("@") ? "Correo inválido" : null,
                         ),
@@ -130,7 +130,7 @@ class _InicioUsuariosScreenState extends State<InicioUsuariosScreen> {
                           controller: _passwordController,
                           obscureText: _obscurePassword,
                           decoration: InputDecoration(
-                            labelText: 'CONTRASEÑA',
+                            labelText: 'Contraseña',
                             suffixIcon: IconButton(
                               icon: Icon(_obscurePassword ? Icons.visibility_off : Icons.visibility),
                               onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
@@ -151,7 +151,7 @@ class _InicioUsuariosScreenState extends State<InicioUsuariosScreen> {
                           ),
                           child: _loading
                               ? const CircularProgressIndicator(color: Colors.white)
-                              : const Text("INICIAR SESIÓN",
+                              : const Text("Iniciar Sesion",
                                 style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
                         ),
 

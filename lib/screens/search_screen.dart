@@ -50,9 +50,9 @@ class _SearchScreenState extends State<SearchScreen> {
           decoration: const InputDecoration(
             hintText: 'Buscar servicio...',
             border: InputBorder.none,
-            hintStyle: TextStyle(color: Colors.white70),
+            hintStyle: TextStyle(color: Color.fromARGB(179, 0, 0, 0)),
           ),
-          style: const TextStyle(color: Colors.white, fontSize: 18),
+          style: const TextStyle(color: Color.fromARGB(255, 0, 0, 0), fontSize: 18),
           onChanged: _searchServices,
         ),
         actions: const [

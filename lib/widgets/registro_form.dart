@@ -98,7 +98,7 @@ void _register() async {
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(content: Text('Debes aceptar Términos y Condiciones')),
     );
-  } // 🛑 ¡FALTA LA LLAVE DE CIERRE DEL MÉTODO AQUÍ!
+  } 
 } 
 
 // ...

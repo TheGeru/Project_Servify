@@ -20,7 +20,7 @@ class AddServiceScreen extends StatelessWidget {
                 style: TextStyle(
                   fontSize: 22,
                   fontWeight: FontWeight.bold,
-                  color: Color.fromARGB(255, 31, 122, 158),
+                  color: Color.fromARGB(255, 0, 0, 0),
                 ),
               ),
               SizedBox(height: 15),

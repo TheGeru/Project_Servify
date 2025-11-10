@@ -43,8 +43,16 @@ class MainApp extends StatelessWidget {
           iconTheme: IconThemeData(color: Colors.black87),
         ),
         floatingActionButtonTheme: const FloatingActionButtonThemeData(
-          backgroundColor: Color.fromARGB(255, 31, 122, 158),
+          backgroundColor: Color.fromARGB(255, 255, 123, 0),
           focusColor: Colors.white,
+          foregroundColor: Color.fromARGB(255, 255, 255, 255),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.all(Radius.circular(12.0)),
+            side: BorderSide(
+              color: Color.fromARGB(255, 255, 124, 1),
+              width: 1.5,
+            ),
+          ),
           elevation: 0,
         ),
       ),

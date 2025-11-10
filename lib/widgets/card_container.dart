@@ -17,12 +17,15 @@ class CardContainer extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Card(
+
+      elevation: 6,
+      shadowColor: Colors.black54,
+
       margin: const EdgeInsets.all(10),
       child: ClipRRect(
         borderRadius: BorderRadius.circular(12.0),
         child: InkWell(
-          onTap: onTap, // esta creo llama la funcion de interaccion al tocar
-          //corriganme si estoy mal
+          onTap: onTap,
           child: Padding(
             padding: const EdgeInsets.all(15.0),
             child: Column(

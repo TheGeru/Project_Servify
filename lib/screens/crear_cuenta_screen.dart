@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:project_servify/services/auth_service.dart';
-import 'package:project_servify/widgets/RegistroForm.dart';
+import 'package:project_servify/widgets/registro_form.dart';
 
 enum TipoUsuario { usuario, proveedor }
 
@@ -11,12 +11,12 @@ class CrearCuentaScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF0F3B81),
+      backgroundColor: const Color.fromARGB(255, 25, 64, 119),
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.white),
+          icon: const Icon(Icons.arrow_back_ios, color: Colors.white),
           onPressed: () => Navigator.pop(context),
         ),
       ),

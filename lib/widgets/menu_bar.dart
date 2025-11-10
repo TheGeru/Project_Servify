@@ -38,20 +38,15 @@ class Menu_Bar extends StatelessWidget implements PreferredSizeWidget {
     return AppBar(
       backgroundColor: backgroundColor,
       toolbarHeight: toolbarHeight,
-      elevation: 1,
+      elevation: 6,
       // Botón de menú (siempre visible)
       leading: IconButton(
         icon: Icon(Icons.menu, color: iconColor),
         onPressed: onMenuPressed ?? () {
           Scaffold.of(context).openDrawer();
         },
-      ),
-      
-      // 
-      // Usaremos un Row para asegurarnos de que el TextField se expanda.
-      title: _buildSearchBar(),
-      
-      // 
+      ), 
+      title: _buildSearchBar(), 
       actions: _buildDynamicActions(context),
     );
   }
@@ -81,7 +76,7 @@ class Menu_Bar extends StatelessWidget implements PreferredSizeWidget {
     );
   }
 
-  // 🛑 NUEVO MÉTODO: Muestra un set de acciones basado en la autenticación
+  // NUEVO MÉTODO: Muestra un set de acciones basado en la autenticación
   List<Widget> _buildDynamicActions(BuildContext context) {
     if (isAuthenticated) {
       // Acciones para usuario autenticado (Notificaciones y Perfil)
@@ -131,21 +126,21 @@ class Menu_Bar extends StatelessWidget implements PreferredSizeWidget {
         ElevatedButton(
           style: ElevatedButton.styleFrom(
             foregroundColor: const Color.fromARGB(255, 0, 0, 0),
-            backgroundColor: Colors.orange,
+            backgroundColor: const Color.fromARGB(255, 255, 153, 0),
             elevation: 0,
             padding: const EdgeInsets.symmetric(horizontal: 4), // Reducir padding
           ),
           onPressed: onLoginPressed ?? () {
             Navigator.pushNamed(context, 'inicio_usuarios');
           },
-          child: const Text('LOGIN', style: TextStyle(fontSize: 12)), // Reducir texto
+          child: const Text('Login', style: TextStyle(fontSize: 12)), // Reducir texto
         ),
         // Espacio reducido
         const SizedBox(width: 4),
         ElevatedButton(
           style: ElevatedButton.styleFrom(
-            foregroundColor: const Color(0xFF0F3B81),
-            backgroundColor: Colors.white,
+            foregroundColor: const Color.fromARGB(255, 255, 255, 255),
+            backgroundColor: const Color(0xFF0F3B81),
             elevation: 0,
             padding: const EdgeInsets.symmetric(horizontal: 4), // Reducir padding
             side: const BorderSide(color: Color(0xFF0F3B81), width: 1), // Borde
@@ -153,7 +148,7 @@ class Menu_Bar extends StatelessWidget implements PreferredSizeWidget {
           onPressed: onSignUpPressed ?? () {
             Navigator.pushNamed(context, 'crear_cuenta');
           },
-          child: const Text('SIGNUP', style: TextStyle(fontSize: 12)), // Reducir texto
+          child: const Text('Signup', style: TextStyle(fontSize: 12)), // Reducir texto
         ),
         const SizedBox(width: 8),
       ];
