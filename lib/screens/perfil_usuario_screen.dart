@@ -7,6 +7,20 @@ class PerfilUsuarioScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFF0F3B81),
+<<<<<<< Updated upstream
+=======
+      appBar: AppBar(
+        backgroundColor: Colors.transparent, // Fondo transparente
+        elevation: 0, // Sin sombra
+        leading: IconButton(
+          icon: const Icon(
+            Icons.arrow_back_ios,
+            color: Colors.white,
+          ), // Ícono blanco
+          onPressed: () => Navigator.pop(context), // Función de regreso
+        ),
+      ),
+>>>>>>> Stashed changes
       body: SingleChildScrollView(
         child: Column(
           children: [
@@ -36,6 +50,10 @@ class PerfilUsuarioScreen extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 20),
+<<<<<<< Updated upstream
+=======
+            // Bloque de padding que antes tenía problemas
+>>>>>>> Stashed changes
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 20),
               child: Container(
@@ -51,10 +69,14 @@ class PerfilUsuarioScreen extends StatelessWidget {
                       offset: Offset(0, 2),
                     ),
                   ],
-                ),               
+                ),
               ),
             ),
             const SizedBox(height: 20),
+<<<<<<< Updated upstream
+=======
+            // Contenedor de Información
+>>>>>>> Stashed changes
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 20),
               child: Container(
@@ -99,12 +121,18 @@ class PerfilUsuarioScreen extends StatelessWidget {
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 children: [
                   ElevatedButton(
-                    style: ElevatedButton.styleFrom(backgroundColor: Colors.orange, foregroundColor: Colors.white),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.orange,
+                      foregroundColor: Colors.white,
+                    ),
                     onPressed: () {},
                     child: const Text('EDITAR'),
                   ),
                   ElevatedButton(
-                    style: ElevatedButton.styleFrom(backgroundColor: Colors.red, foregroundColor: Colors.white),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.red,
+                      foregroundColor: Colors.white,
+                    ),
                     onPressed: () {},
                     child: const Text('ELIMINAR'),
                   ),

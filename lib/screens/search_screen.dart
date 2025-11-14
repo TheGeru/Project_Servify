@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:project_servify/widgets/card_container.dart';
 
 class SearchScreen extends StatefulWidget {
+  // allServices contiene Map<String, String> para la búsqueda sencilla
   final List<Map<String, String>> allServices;
+  // La función recibe el título para que home_screen encuentre el ServiceData completo
   final Function(BuildContext, String) navigateToServiceDetail;
 
   const SearchScreen({
@@ -52,13 +54,20 @@ class _SearchScreenState extends State<SearchScreen> {
             border: InputBorder.none,
             hintStyle: TextStyle(color: Colors.white70),
           ),
+<<<<<<< Updated upstream
           style: const TextStyle(color: Colors.white, fontSize: 18),
+=======
+          style: const TextStyle(
+            color: Color.fromARGB(255, 0, 0, 0),
+            fontSize: 18,
+          ),
+>>>>>>> Stashed changes
           onChanged: _searchServices,
         ),
         actions: const [
           Padding(
             padding: EdgeInsets.only(right: 15.0),
-            child: Icon(Icons.search, color: Colors.white),
+            child: Icon(Icons.search, color: Color.fromARGB(255, 31, 122, 158)),
           ),
         ],
       ),
@@ -78,6 +87,7 @@ class _SearchScreenState extends State<SearchScreen> {
                   categoria: service['categoria']!,
                   descripcion: service['descripcion']!,
                   onTap: () {
+                    // Navega usando el título, que se usa en home_screen para obtener los datos completos
                     widget.navigateToServiceDetail(context, service['titulo']!);
                   },
                 );
