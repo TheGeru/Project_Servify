@@ -1,18 +1,23 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart'; // Necesario para el tipo User
+import 'package:project_servify/screens/home_screen.dart';
 import 'package:project_servify/widgets/menu_bar.dart'; 
+import 'package:project_servify/models/usuarios_model.dart';
+import 'package:project_servify/screens/perfil_usuario_screen.dart';
+import 'package:project_servify/models/usuarios_model.dart';
 // Asegúrate de importar el archivo donde tienes Menu_Bar
 
 class HomeView extends StatelessWidget {
   // --- PROPIEDADES RECIBIDAS (DATOS Y CALLBACKS) ---
   final User? user;
+  final UsuarioModel? userModel;
   final List<Map<String, String>> allServices;
   final int selectedIndex;
   final List<Widget> widgetOptions;
   
   // Callbacks de Lógica
   final Function(int) onItemTapped;
-  final Function(BuildContext, String) navigateToServiceDetail;
+  final Function(BuildContext, ServiceData) navigateToServiceDetail;
   final Function(BuildContext) navigateToSearch;
   final Function(BuildContext) navigateToAddService;
   final Function(BuildContext) navigateToNotifications;
@@ -20,6 +25,7 @@ class HomeView extends StatelessWidget {
   const HomeView({
     super.key,
     required this.user,
+    required this.userModel,
     required this.allServices,
     required this.selectedIndex,
     required this.widgetOptions,
@@ -39,11 +45,13 @@ class HomeView extends StatelessWidget {
         children: <Widget>[
           UserAccountsDrawerHeader(
             accountName: Text(
-              user != null ? user?.displayName ?? "Usuario de Servify" : "Invitado",
+              userModel != null 
+                  ? '${userModel!.nombre} ${userModel!.apellidos}' 
+                  : (user != null ? user!.displayName ?? "Usuario Sin Nombre" : "Invitado"),
               style: const TextStyle(fontWeight: FontWeight.bold),
             ),
             accountEmail: user != null 
-                ? Text(user!.email ?? "Correo no disponible") 
+                ? Text(user!.email ?? "Correo no disponible")
                 : const Text("Inicia sesión o regístrate"), 
             currentAccountPicture: CircleAvatar(
               backgroundColor: Colors.white,
@@ -77,13 +85,19 @@ class HomeView extends StatelessWidget {
             title: const Text('Perfil'),
             onTap: () {
               Navigator.pop(context);
+
               if (user != null) {
-                 onItemTapped(2); // Usamos la función pasada
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => PerfilUsuarioScreen(userModel: userModel!), 
+                  ),
+                );
               } else {
                  ScaffoldMessenger.of(context).showSnackBar(
                    const SnackBar(content: Text('Debes iniciar sesión para ver tu perfil')),
                  );
-                 Navigator.pushNamed(context, 'inicio_usuarios');
+                  Navigator.pushNamed(context, 'inicio_usuarios');
               }
             },
           ),

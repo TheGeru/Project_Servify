@@ -4,7 +4,7 @@ class CardContainer extends StatelessWidget {
   final String titulo;
   final String categoria;
   final String descripcion;
-  final VoidCallback onTap;
+  final VoidCallback? onTap;
 
   const CardContainer({
     super.key,
@@ -17,7 +17,6 @@ class CardContainer extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Card(
-
       elevation: 6,
       shadowColor: Colors.black54,
 

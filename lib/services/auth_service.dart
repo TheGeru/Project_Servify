@@ -1,104 +1,110 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:google_sign_in/google_sign_in.dart';
-import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:project_servify/services/google_services.dart';
 
 class AuthService {
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
-  // Registro con correo/contraseña
+  final GoogleAuthServices _googleService = GoogleAuthServices();
+
+  /// REGISTRO TRADICIONAL
   Future<UserCredential> registerWithEmail({
     required String email,
     required String password,
     required String name,
-    required String role,
-    String? phone,
-    String? description,
-    List<String>? oficios,
+    required String lastName,
+    required String phone,
   }) async {
-    final cred = await _auth.createUserWithEmailAndPassword(email: email, password: password);
+    final cred = await _auth.createUserWithEmailAndPassword(
+      email: email,
+      password: password,
+    );
 
-    await _firestore.collection('users').doc(cred.user!.uid).set({
-      'uid': cred.user!.uid,
-      'name': name,
-      'email': email,
-      'role': role,
-      'phone': phone ?? '',
-      'description': description ?? '',
-      'oficios': oficios ?? [],
-      'createdAt': FieldValue.serverTimestamp(),
-    });
+    await _createUserInFirestore(
+      uid: cred.user!.uid,
+      name: name,
+      lastName: lastName,
+      email: email,
+      phone: phone,
+    );
 
     return cred;
   }
 
-  // Google Sign-In (Web y Móvil)
-Future<UserCredential?> signInWithGoogle({String role = 'user'}) async {
-  try {
-    if (kIsWeb) {
-      // Web
-      GoogleAuthProvider googleProvider = GoogleAuthProvider();
-      googleProvider.addScope('email');
-      final userCredential = await _auth.signInWithPopup(googleProvider);
-      await _saveUserData(userCredential.user!, role);
-      return userCredential;
-    } else {
-      // Android/iOS
-      final GoogleSignIn googleSignIn = GoogleSignIn(
-        scopes: ['email', 'openid'],  // incluir 'openid' para idToken posiblemente
-      );
-
-      final GoogleSignInAccount? googleUser = await googleSignIn.signIn();
-      if (googleUser == null) return null;
-
-      final GoogleSignInAuthentication googleAuth = await googleUser.authentication;
-
-      // En la nueva API puede que accessToken sea null o no esté definido
-      final OAuthCredential credential = GoogleAuthProvider.credential(
-        idToken: googleAuth.idToken,
-        // accessToken: googleAuth.accessToken,  // <— quita o pon condicionalmente si existe
-      );
-
-      final userCredential = await _auth.signInWithCredential(credential);
-      await _saveUserData(userCredential.user!, role);
-      return userCredential;
-    }
-  } catch (e) {
-    rethrow;
+  /// LOGIN TRADICIONAL
+  Future<UserCredential> loginWithEmail({
+    required String email,
+    required String password,
+  }) async {
+    return _auth.signInWithEmailAndPassword(email: email, password: password);
   }
-}
 
-Future<UserCredential> loginWithEmail({
-  required String email,
-  required String password,
-}) async {
-  return await _auth.signInWithEmailAndPassword(
-    email: email,
-    password: password,
-  );
-}
+  //LOGIN CON GOOGLE
+  Future<User?> signInWithGoogle() async {
+    try {
+      final credential = await _googleService.singInWithGoogle();
+      final user = credential.user;
 
+      if (user == null) return null;
+      await saveGoogleUser(user);
+      return user;
+    } catch (e) {
+      rethrow;
+    }
+  }
 
-  Future<void> _saveUserData(User user, String role) async {
-    final userDoc = _firestore.collection('users').doc(user.uid);
-    final snapshot = await userDoc.get();
+  /// -----------------------------
+  /// CREAR EN FIRESTORE (REGISTRO NORMAL)
+  /// -----------------------------
+  Future<void> _createUserInFirestore({
+    required String uid,
+    required String name,
+    required String lastName,
+    required String email,
+    required String phone,
+  }) async {
+    final doc = _firestore.collection('users').doc(uid);
 
-    if (!snapshot.exists) {
-      await userDoc.set({
+    if (!(await doc.get()).exists) {
+      await doc.set({
+        'uid': uid,
+        'name': name,
+        'lastName': lastName,
+        'email': email,
+        'phone': phone,
+        'isProvider': false,
+        'role': 'user',
+        'createdAt': FieldValue.serverTimestamp(),
+      });
+    }
+  }
+
+  /// -----------------------------
+  /// CREAR O ACTUALIZAR DESPUÉS DE GOOGLE
+  /// -----------------------------
+  Future<void> saveGoogleUser(User user) async {
+    final doc = _firestore.collection('users').doc(user.uid);
+
+    if (!(await doc.get()).exists) {
+      await doc.set({
         'uid': user.uid,
         'name': user.displayName ?? '',
+        'lastName': '',
         'email': user.email ?? '',
+        'phone': '',
         'photoURL': user.photoURL ?? '',
-        'role': role,
+        'isProvider': false,
+        'role': 'user',
         'createdAt': FieldValue.serverTimestamp(),
       });
     } else {
-      await userDoc.set({
+      // Si ya existe, solo actualizamos datos básicos
+      await doc.update({
         'name': user.displayName ?? '',
-        'email': user.email ?? '',
         'photoURL': user.photoURL ?? '',
-      }, SetOptions(merge: true));
+        'email': user.email ?? '',
+      });
     }
   }
 

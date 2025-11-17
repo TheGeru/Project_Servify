@@ -1,19 +1,30 @@
 import 'package:flutter/material.dart';
+import 'package:project_servify/models/usuarios_model.dart';
 
 class PerfilUsuarioScreen extends StatelessWidget {
-  const PerfilUsuarioScreen({super.key});
+  final UsuarioModel userModel;
+
+  const PerfilUsuarioScreen({
+    super.key,
+    required this.userModel,
+  });
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFF0F3B81),
-      // 🛑 1. AGREGAR APPBAR PARA EL BOTÓN DE REGRESO
       appBar: AppBar(
         backgroundColor: Colors.transparent, // Fondo transparente
         elevation: 0, // Sin sombra
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios, color: Colors.white), // Ícono blanco
-          onPressed: () => Navigator.pushReplacementNamed(context, 'home'), // Función de regreso manual
+          icon: const Icon(
+            Icons.arrow_back_ios,
+            color: Colors.white,
+          ), // Ícono blanco
+          onPressed: () => Navigator.pushReplacementNamed(
+            context,
+            'home',
+          ), // Función de regreso manual
         ),
       ),
       body: SingleChildScrollView(
@@ -62,7 +73,7 @@ class PerfilUsuarioScreen extends StatelessWidget {
                       offset: Offset(0, 2),
                     ),
                   ],
-                ),               
+                ),
               ),
             ),
             const SizedBox(height: 20),
@@ -85,17 +96,18 @@ class PerfilUsuarioScreen extends StatelessWidget {
                 ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
-                  children: const [
+                  children: [
                     Text(
                       'INFORMACION',
                       style: TextStyle(fontWeight: FontWeight.bold),
                     ),
                     SizedBox(height: 10),
-                    Text('NOMBRE COMPLETO'),
-                    Text('Juan Perez Alonso'),
+                    Text("Nombre"),
+                    Text('${userModel.nombre}'),
+                    Text('Apellidos: ${userModel.apellidos}'),
                     SizedBox(height: 10),
                     Text('TELEFONO'),
-                    Text('427123456'),
+                    Text('${userModel.telefono}'),
                     SizedBox(height: 10),
                     Text('CORREO'),
                     Text('ejemplo@hotmail.com'),
@@ -111,12 +123,18 @@ class PerfilUsuarioScreen extends StatelessWidget {
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 children: [
                   ElevatedButton(
-                    style: ElevatedButton.styleFrom(backgroundColor: Colors.orange, foregroundColor: Colors.white),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.orange,
+                      foregroundColor: Colors.white,
+                    ),
                     onPressed: () {},
                     child: const Text('EDITAR'),
                   ),
                   ElevatedButton(
-                    style: ElevatedButton.styleFrom(backgroundColor: Colors.red, foregroundColor: Colors.white),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.red,
+                      foregroundColor: Colors.white,
+                    ),
                     onPressed: () {},
                     child: const Text('ELIMINAR'),
                   ),

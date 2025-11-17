@@ -1,17 +1,21 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
 import 'package:project_servify/screens/history_screen.dart';
 import 'package:project_servify/screens/service_detail_screen.dart';
 import 'package:project_servify/screens/add_service_screen.dart';
+import 'package:project_servify/screens/add_service_screen.dart';
 import 'package:project_servify/screens/search_screen.dart';
 import 'package:project_servify/screens/notifications_screen.dart';
 import 'package:project_servify/screens/perfil_proveedor_screen.dart';
-
+import 'package:project_servify/models/usuarios_model.dart';
 // Importamos la vista (el diseño)
-import 'package:project_servify/widgets/home_view.dart'; 
+import 'package:project_servify/widgets/home_view.dart';
 import 'package:project_servify/widgets/card_container.dart';
 
+typedef ServiceData = Map<String, dynamic>;
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -24,11 +28,33 @@ class _HomeScreenState extends State<HomeScreen> {
   // --- 1. PROPIEDADES (ESTADO Y DATOS) ---
   int _selectedIndex = 0;
   final List<Map<String, String>> allServices = const [
-    {'titulo': 'Carpintería', 'categoria': 'Servicios', 'descripcion': 'Ofrecemos servicios de carpintería a medida.'},
-    {'titulo': 'Plomería', 'categoria': 'Servicios', 'descripcion': 'Reparación y mantenimiento de sistemas de plomería.'},
-    {'titulo': 'Electricidad', 'categoria': 'Servicios', 'descripcion': 'Instalación y reparación de sistemas eléctricos de tu casa u oficina.'},
-    {'titulo': 'Jardinería', 'categoria': 'Servicios', 'descripcion': 'Mantenimiento y diseño de jardines para tus áreas verdes.'},
-    {'titulo': 'Plomería Urgente', 'categoria': 'Servicios', 'descripcion': 'Mantenimiento y diseño de tus tuberías de tu casa.'},
+    {
+      'titulo': 'Carpintería',
+      'categoria': 'Servicios',
+      'descripcion': 'Ofrecemos servicios de carpintería a medida.',
+    },
+    {
+      'titulo': 'Plomería',
+      'categoria': 'Servicios',
+      'descripcion': 'Reparación y mantenimiento de sistemas de plomería.',
+    },
+    {
+      'titulo': 'Electricidad',
+      'categoria': 'Servicios',
+      'descripcion':
+          'Instalación y reparación de sistemas eléctricos de tu casa u oficina.',
+    },
+    {
+      'titulo': 'Jardinería',
+      'categoria': 'Servicios',
+      'descripcion':
+          'Mantenimiento y diseño de jardines para tus áreas verdes.',
+    },
+    {
+      'titulo': 'Plomería Urgente',
+      'categoria': 'Servicios',
+      'descripcion': 'Mantenimiento y diseño de tus tuberías de tu casa.',
+    },
   ];
 
   // --- 2. MÉTODOS Y FUNCIONES (LÓGICA) ---
@@ -42,20 +68,30 @@ class _HomeScreenState extends State<HomeScreen> {
     });
   }
 
-  void navigateToServiceDetail(BuildContext context, String title) {
+  void navigateToServiceDetail(BuildContext context, ServiceData serviceData) {
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (context) => ServiceDetailScreen(serviceTitle: title),
+        builder: (context) => ServiceDetailScreen(serviceData: serviceData),
       ),
     );
   }
 
   void navigateToAddService(BuildContext context) {
-    Navigator.push(
-      context,
-      MaterialPageRoute(builder: (context) => const AddServiceScreen()),
-    );
+    final User? user = FirebaseAuth.instance.currentUser;
+    if (user == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Debes iniciar sesión para publicar un servicio.'),
+        ),
+      );
+      Navigator.pushNamed(context, 'inicio_usuarios');
+    } else {
+      Navigator.push(
+        context,
+        MaterialPageRoute(builder: (context) => const AddServiceScreen()),
+      );
+    }
   }
 
   void navigateToSearch(BuildContext context) {
@@ -63,8 +99,14 @@ class _HomeScreenState extends State<HomeScreen> {
       context,
       MaterialPageRoute(
         builder: (context) => SearchScreen(
-          allServices: allServices,
-          navigateToServiceDetail: navigateToServiceDetail,
+          // Convertir la lista a Map<String, String> para compatibilidad de SearchScreen
+          allServices: allServices
+              .map((s) => s.map((k, v) => MapEntry(k, v.toString())))
+              .toList(),
+          navigateToServiceDetail: (ctx, title) {
+            final service = allServices.firstWhere((s) => s['titulo'] == title);
+            navigateToServiceDetail(ctx, service);
+          },
         ),
       ),
     );
@@ -79,44 +121,72 @@ class _HomeScreenState extends State<HomeScreen> {
 
   // --- 3. CONSTRUCCIÓN (STREAM BUILDER) ---
 
-  @override
-  Widget build(BuildContext context) {
-    return StreamBuilder<User?>(
-      stream: FirebaseAuth.instance.authStateChanges(),
-      builder: (context, snapshot) {
-        final User? user = snapshot.data;
-        
-        // La lista de widgets se mantiene aquí ya que depende del estado interno
-        final List<Widget> widgetOptions = <Widget>[
-          _ServicesList(
-            navigateToServiceDetail: navigateToServiceDetail,
-            services: allServices,
-          ),
-          const HistoryScreen(),
-          const PerfilProveedorScreen(), // Índice 2
-        ];
-        
-        // Mandamos todos los datos y la lógica al widget de Diseño (HomeView)
+@override
+Widget build(BuildContext context) {
+  return StreamBuilder<User?>(
+    stream: FirebaseAuth.instance.authStateChanges(),
+    builder: (context, snapshot) {
+      final firebaseUser = snapshot.data;
+
+      // Si NO hay usuario autenticado → Home sin datos
+      if (firebaseUser == null) {
         return HomeView(
-          user: user,
-          allServices: allServices, // Aunque no se usa en la vista principal, es bueno mantenerlo
-          selectedIndex: _selectedIndex,
-          widgetOptions: widgetOptions,
-          // Funciones de navegación
-          onItemTapped: _onItemTapped,
-          navigateToServiceDetail: navigateToServiceDetail,
-          navigateToSearch: navigateToSearch,
-          navigateToAddService: navigateToAddService,
-          navigateToNotifications: navigateToNotifications,
+          user: null,
+          userModel: null,
+          allServices: [],
+          selectedIndex: 0,
+          widgetOptions: [],
+          onItemTapped: (index) {},
+          navigateToSearch: (ctx) {},
+          navigateToAddService: (ctx) {},
+          navigateToNotifications: (ctx) {},
+          navigateToServiceDetail: (ctx, serviceData) {},
         );
-      },
+      }
+
+      // SI hay usuario → Escuchar Firestore
+      return StreamBuilder<DocumentSnapshot<Map<String, dynamic>>>(
+  stream: FirebaseFirestore.instance
+      .collection('users')
+      .doc(firebaseUser.uid)
+      .snapshots(),
+  builder: (context, userSnapshot) {
+    if (userSnapshot.connectionState == ConnectionState.waiting) {
+      return const Center(child: CircularProgressIndicator());
+    }
+
+    if (!userSnapshot.hasData || !userSnapshot.data!.exists) {
+      return const Center(child: Text("Error cargando datos del usuario"));
+    }
+
+    // Aquí usamos el snapshot correcto (userSnapshot)
+    final data = userSnapshot.data!.data()!;
+    final usuarioModel = UsuarioModel.fromMap(data);
+
+    return HomeView(
+      user: firebaseUser,
+      userModel: usuarioModel,
+      allServices:  [],
+      selectedIndex: 0,
+      widgetOptions: [],
+      onItemTapped: (index) {},
+      navigateToSearch: (ctx) {},
+      navigateToAddService: (ctx) {},
+      navigateToNotifications: (ctx) {},
+      navigateToServiceDetail: (ctx, serviceData) {},
     );
-  }
+  },
+);
+
+    },
+  );
+}
+
 }
 
 // Mantenemos _ServicesList aquí, o puedes moverlo también si lo deseas.
 class _ServicesList extends StatelessWidget {
-  final Function(BuildContext, String) navigateToServiceDetail;
+  final Function(BuildContext, ServiceData) navigateToServiceDetail;
   final List<Map<String, String>> services;
 
   const _ServicesList({
@@ -133,7 +203,9 @@ class _ServicesList extends StatelessWidget {
             titulo: service['titulo']!,
             categoria: service['categoria']!,
             descripcion: service['descripcion']!,
-            onTap: () => navigateToServiceDetail(context, service['titulo']!),
+            onTap: () {
+              navigateToServiceDetail(context, service);
+            },
           ),
         ),
         const SizedBox(height: 80),

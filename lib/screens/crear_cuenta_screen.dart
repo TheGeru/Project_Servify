@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:project_servify/services/auth_service.dart';
 import 'package:project_servify/widgets/registro_form.dart';
+import 'package:project_servify/services/google_services.dart';
 
 enum TipoUsuario { usuario, proveedor }
 
@@ -51,7 +52,7 @@ class CrearCuentaScreen extends StatelessWidget {
                 elevation: 10,
                 child: Padding(
                   padding: const EdgeInsets.all(18),
-                  child: RegistroForm(authService: AuthService()), // <-- Aquí usamos el widget separado
+                  child: RegistroForm(authService: AuthService(), googleService: GoogleAuthServices()), // <-- Aquí usamos el widget separado
                 ),
               ),
             ],
