@@ -157,7 +157,9 @@ class HomeView extends StatelessWidget {
         onSignUpPressed: () => Navigator.pushNamed(context, 'crear_cuenta'),
       ),
       drawer: _buildDrawer(context), // Usamos el Drawer separado
-      body: widgetOptions.elementAt(selectedIndex),
+      body: selectedIndex < widgetOptions.length
+      ?widgetOptions[selectedIndex]
+      :widgetOptions.first,
       floatingActionButton: selectedIndex == 0
           ? Visibility(
             visible: userModel?.tipo == 'provider',

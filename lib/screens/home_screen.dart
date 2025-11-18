@@ -60,6 +60,13 @@ class _HomeScreenState extends State<HomeScreen> {
   // --- 2. MÉTODOS Y FUNCIONES (LÓGICA) ---
 
   void _onItemTapped(int index) {
+    final User? currentUser = FirebaseAuth.instance.currentUser;
+    final maxIndex = currentUser != null ? 2 : 2;
+
+    if (index > maxIndex) {
+      index = 0;
+    }
+
     setState(() {
       _selectedIndex = index;
       if (index != 0) {
@@ -121,98 +128,115 @@ class _HomeScreenState extends State<HomeScreen> {
 
   // --- 3. CONSTRUCCIÓN (STREAM BUILDER) ---
 
-@override
-Widget build(BuildContext context) {
-  return StreamBuilder<User?>(
-    stream: FirebaseAuth.instance.authStateChanges(),
-    builder: (context, snapshot) {
-      final firebaseUser = snapshot.data;
+  @override
+  Widget build(BuildContext context) {
+    return StreamBuilder<User?>(
+      stream: FirebaseAuth.instance.authStateChanges(),
+      builder: (context, snapshot) {
+        final firebaseUser = snapshot.data;
 
-      // Si NO hay usuario autenticado → Home sin datos
-      if (firebaseUser == null) {
-        return HomeView(
-          user: null,
-          userModel: null,
-          allServices: [],
-          selectedIndex: 0,
-          widgetOptions: [
-            _ServicesList(
-              navigateToServiceDetail: navigateToServiceDetail,
-              services: allServices,
-            ),
-            SearchScreen(
-              allServices: [],
-              navigateToServiceDetail: (ctx, title) {},
-            ),
-            PerfilUsuarioScreen(
-              //podria mejorarse, segun no es la mejor opcion pero 
-              //por tiempo es como lo pude arreglar
+        if (firebaseUser == null && _selectedIndex > 2) {
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            if (mounted) {
+              setState(() => _selectedIndex = 0);
+              }
+            });
+          }
+        // Si NO hay usuario autenticado → Home sin datos
+        if (firebaseUser == null) {
+          return HomeView(
+            user: null,
+            userModel: null,
+            allServices: allServices,
+            selectedIndex: _selectedIndex.clamp(0, 2),
+            widgetOptions: [
+              _ServicesList(
+                navigateToServiceDetail: navigateToServiceDetail,
+                services: allServices,
+              ),
+              SearchScreen(
+                allServices: allServices,
+                navigateToServiceDetail: (ctx, title) {
+                  final service = allServices.firstWhere(
+                    (s) => s['titulo'] == title,
+                  );
+                  navigateToServiceDetail(ctx, service);
+                },
+              ),
+              PerfilUsuarioScreen(
+                //podria mejorarse, segun no es la mejor opcion pero
+                //por tiempo es como lo pude arreglar
                 userModel: UsuarioModel(
                   uid: '',
-                  nombre: 'Juan',
-                  apellidos: 'Sanchez',
-                  email: 'juanzanchez@gmail.com',
-                  telefono: '4345678901',
+                  nombre: 'Invitado',
+                  apellidos: '',
+                  email: '',
+                  telefono: '',
                   tipo: 'user',
                 ),
               ),
-        ],
-          onItemTapped: _onItemTapped,
-          navigateToSearch: (ctx) {},
-          navigateToAddService: (ctx) {},
-          navigateToNotifications: (ctx) {},
-          navigateToServiceDetail: (ctx, serviceData) {},
+            ],
+              onItemTapped: _onItemTapped,
+              navigateToSearch: navigateToSearch,
+              navigateToAddService: navigateToAddService,
+              navigateToNotifications: navigateToNotifications,
+              navigateToServiceDetail: navigateToServiceDetail,
+          );
+        }
+
+        // SI hay usuario → Escuchar Firestore
+        return StreamBuilder<DocumentSnapshot<Map<String, dynamic>>>(
+          stream: FirebaseFirestore.instance
+              .collection('users')
+              .doc(firebaseUser.uid)
+              .snapshots(),
+          builder: (context, userSnapshot) {
+            if (userSnapshot.connectionState == ConnectionState.waiting) {
+              return const Center(child: CircularProgressIndicator());
+            }
+
+            if (!userSnapshot.hasData || !userSnapshot.data!.exists) {
+              return const Center(
+                child: Text("Error cargando datos del usuario"),
+              );
+            }
+
+            // Aquí usamos el snapshot correcto (userSnapshot)
+            final data = userSnapshot.data!.data()!;
+            final usuarioModel = UsuarioModel.fromMap(data);
+
+            return HomeView(
+              user: firebaseUser,
+              userModel: usuarioModel,
+              allServices: allServices,
+              selectedIndex: _selectedIndex.clamp(0, 2),
+              widgetOptions: [
+                _ServicesList(
+                  navigateToServiceDetail: navigateToServiceDetail,
+                  services: allServices,
+                ),
+                SearchScreen(
+                  allServices: allServices,
+                  navigateToServiceDetail: (ctx, title) {
+                    final service = allServices.firstWhere(
+                      (s) => s['titulo'] == title,
+                    );
+                    navigateToServiceDetail(ctx, service);
+                  },
+                ),
+                PerfilUsuarioScreen(userModel: usuarioModel),
+              ],
+                onItemTapped: _onItemTapped,
+                navigateToSearch: navigateToSearch,
+                navigateToAddService: navigateToAddService,
+                navigateToNotifications: navigateToNotifications,
+                navigateToServiceDetail: navigateToServiceDetail,
+            );
+          },
         );
-      }
-
-      // SI hay usuario → Escuchar Firestore
-      return StreamBuilder<DocumentSnapshot<Map<String, dynamic>>>(
-  stream: FirebaseFirestore.instance
-      .collection('users')
-      .doc(firebaseUser.uid)
-      .snapshots(),
-  builder: (context, userSnapshot) {
-    if (userSnapshot.connectionState == ConnectionState.waiting) {
-      return const Center(child: CircularProgressIndicator());
-    }
-
-    if (!userSnapshot.hasData || !userSnapshot.data!.exists) {
-      return const Center(child: Text("Error cargando datos del usuario"));
-    }
-
-    // Aquí usamos el snapshot correcto (userSnapshot)
-    final data = userSnapshot.data!.data()!;
-    final usuarioModel = UsuarioModel.fromMap(data);
-
-    return HomeView(
-      user: firebaseUser,
-      userModel: usuarioModel,
-      allServices:  [],
-      selectedIndex: 0,
-      widgetOptions: [
-        _ServicesList(
-          navigateToServiceDetail: navigateToServiceDetail,
-          services: allServices,
-        ),
-        SearchScreen(
-          allServices: [],
-          navigateToServiceDetail: (ctx, title) {},
-        ),
-        PerfilUsuarioScreen(userModel: usuarioModel,),
-      ],
-      onItemTapped: _onItemTapped,
-      navigateToSearch: (ctx) {},
-      navigateToAddService: (ctx) {},
-      navigateToNotifications: (ctx) {},
-      navigateToServiceDetail: (ctx, serviceData) {},
+      },
     );
-  },
-);
-
-    },
-  );
-}
-
+  }
 }
 
 // Mantenemos _ServicesList aquí, o puedes moverlo también si lo deseas.
