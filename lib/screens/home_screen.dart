@@ -4,8 +4,8 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
 import 'package:project_servify/screens/history_screen.dart';
+import 'package:project_servify/screens/perfil_usuario_screen.dart';
 import 'package:project_servify/screens/service_detail_screen.dart';
-import 'package:project_servify/screens/add_service_screen.dart';
 import 'package:project_servify/screens/add_service_screen.dart';
 import 'package:project_servify/screens/search_screen.dart';
 import 'package:project_servify/screens/notifications_screen.dart';
@@ -135,8 +135,29 @@ Widget build(BuildContext context) {
           userModel: null,
           allServices: [],
           selectedIndex: 0,
-          widgetOptions: [],
-          onItemTapped: (index) {},
+          widgetOptions: [
+            _ServicesList(
+              navigateToServiceDetail: navigateToServiceDetail,
+              services: allServices,
+            ),
+            SearchScreen(
+              allServices: [],
+              navigateToServiceDetail: (ctx, title) {},
+            ),
+            PerfilUsuarioScreen(
+              //podria mejorarse, segun no es la mejor opcion pero 
+              //por tiempo es como lo pude arreglar
+                userModel: UsuarioModel(
+                  uid: '',
+                  nombre: 'Juan',
+                  apellidos: 'Sanchez',
+                  email: 'juanzanchez@gmail.com',
+                  telefono: '4345678901',
+                  tipo: 'user',
+                ),
+              ),
+        ],
+          onItemTapped: _onItemTapped,
           navigateToSearch: (ctx) {},
           navigateToAddService: (ctx) {},
           navigateToNotifications: (ctx) {},
@@ -168,8 +189,18 @@ Widget build(BuildContext context) {
       userModel: usuarioModel,
       allServices:  [],
       selectedIndex: 0,
-      widgetOptions: [],
-      onItemTapped: (index) {},
+      widgetOptions: [
+        _ServicesList(
+          navigateToServiceDetail: navigateToServiceDetail,
+          services: allServices,
+        ),
+        SearchScreen(
+          allServices: [],
+          navigateToServiceDetail: (ctx, title) {},
+        ),
+        PerfilUsuarioScreen(userModel: usuarioModel,),
+      ],
+      onItemTapped: _onItemTapped,
       navigateToSearch: (ctx) {},
       navigateToAddService: (ctx) {},
       navigateToNotifications: (ctx) {},

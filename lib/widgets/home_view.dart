@@ -159,11 +159,15 @@ class HomeView extends StatelessWidget {
       drawer: _buildDrawer(context), // Usamos el Drawer separado
       body: widgetOptions.elementAt(selectedIndex),
       floatingActionButton: selectedIndex == 0
-          ? FloatingActionButton(
+          ? Visibility(
+            visible: userModel?.tipo == 'provider',
+            child: FloatingActionButton(
               onPressed: () => navigateToAddService(context),
+              backgroundColor: const Color(0xFF0F3B81),
               child: const Icon(Icons.add),
             )
-          : null,
+          )
+        : null,
     );
   }
 }

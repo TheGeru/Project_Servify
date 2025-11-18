@@ -1,13 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:project_servify/models/usuarios_model.dart';
+import 'package:project_servify/screens/add_service_screen.dart';
+import 'package:project_servify/widgets/info_row.dart';
 
 class PerfilUsuarioScreen extends StatelessWidget {
   final UsuarioModel userModel;
 
-  const PerfilUsuarioScreen({
-    super.key,
-    required this.userModel,
-  });
+  const PerfilUsuarioScreen({super.key, required this.userModel});
 
   @override
   Widget build(BuildContext context) {
@@ -101,17 +100,20 @@ class PerfilUsuarioScreen extends StatelessWidget {
                       'INFORMACION',
                       style: TextStyle(fontWeight: FontWeight.bold),
                     ),
+                    ...(
+                      userModel.tipo == 'provider'
+                    ? [
+                      InfoRow(
+                        title: "Descripcion",
+                        value: userModel.descripcion ?? "Sin descripcion",
+                      ),
+                    ]: [
                     SizedBox(height: 10),
-                    Text("Nombre"),
-                    Text('${userModel.nombre}'),
-                    Text('Apellidos: ${userModel.apellidos}'),
-                    SizedBox(height: 10),
-                    Text('TELEFONO'),
-                    Text('${userModel.telefono}'),
-                    SizedBox(height: 10),
-                    Text('CORREO'),
-                    Text('ejemplo@hotmail.com'),
-                    SizedBox(height: 10),
+                    InfoRow(title: "Nombre", value: userModel.nombre),
+                    InfoRow(title: "Apellido", value: userModel.apellidos),
+                    InfoRow(title: "Correo", value: userModel.email),
+                    InfoRow(title: "Telefono", value: userModel.telefono),
+                    ]),
                   ],
                 ),
               ),
@@ -138,6 +140,17 @@ class PerfilUsuarioScreen extends StatelessWidget {
                     onPressed: () {},
                     child: const Text('ELIMINAR'),
                   ),
+                  if (userModel.tipo == 'user')
+                    ElevatedButton(
+                      onPressed: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(builder: (_) => AddServiceScreen()
+                          ),
+                        );
+                      },
+                      child: const Text('Convertirme en en Proveedor'),
+                    ),
                 ],
               ),
             ),

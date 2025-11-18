@@ -23,20 +23,21 @@ class UsuarioModel {
     this.fotoUrl,
     this.oficios,
   });
-
+  
   factory UsuarioModel.fromMap(Map<String, dynamic> json) => UsuarioModel(
     uid: json["uid"] ?? '',
-    nombre: json["nombre"] ?? '',
-    apellidos: json["apellidos"] ?? '',
+    nombre: json["nombre"] ?? json["name"] ?? '',
+    apellidos: json["apellidos"] ?? json["lastName"] ?? '',
     email: json["email"] ?? '',
-    telefono: json["telefono"] ?? '',
-    tipo: json["tipo"] ?? 'user',
+    telefono: json["telefono"] ?? json["phone"] ?? '',
+    tipo: json["tipo"] ?? json["role"] ?? 'user',
     descripcion: json["descripcion"],
     fotoUrl: json["fotoUrl"],
     oficios: json["oficios"] != null
-        ? List<String>.from(json["oficios"])
-        : <String>[],
+      ? List<String>.from(json["oficios"])
+      : [],
   );
+
 
   Map<String, dynamic> toMap() => {
     "uid": uid,
