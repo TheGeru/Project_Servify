@@ -7,5 +7,5 @@ A new Flutter project.
 - Dolores Abril Sánchez Camacho.
 - Brandon Alonso Salinas
 - Daniel Ulises Vazquez Hernandez.
-- Sinecio Ricardo Morales 
+- Ricardo Morales Sinecio
 
