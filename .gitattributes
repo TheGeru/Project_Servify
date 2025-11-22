@@ -1,0 +1,36 @@
+# Auto detect text files and perform LF normalization
+* text=auto
+
+# Force Dart files to always use LF (Linux style) in the repo
+*.dart text eol=lf
+
+# Force batch files to always use CRLF (Windows style)
+*.bat text eol=crlf
+
+# Force Gradle files to use LF
+*.gradle text eol=lf
+gradlew text eol=lf
+
+# Binary files (images, etc) should not be touched
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.mov binary
+*.mp4 binary
+*.mp3 binary
+*.flv binary
+*.fla binary
+*.swf binary
+*.gz binary
+*.zip binary
+*.7z binary
+*.jar binary
+*.ttf binary
+*.otf binary
+*.eot binary
+*.woff binary
+*.woff2 binary
+*.pyc binary
+*.pdf binary
