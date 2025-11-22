@@ -51,7 +51,6 @@ class Menu_Bar extends StatelessWidget implements PreferredSizeWidget {
     );
   }
 
-  // Ahora usa Expanded dentro de un Row para ocupar el espacio
   Widget _buildSearchBar() {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 12),
@@ -76,10 +75,9 @@ class Menu_Bar extends StatelessWidget implements PreferredSizeWidget {
     );
   }
 
-  // NUEVO MÉTODO: Muestra un set de acciones basado en la autenticación
   List<Widget> _buildDynamicActions(BuildContext context) {
     if (isAuthenticated) {
-      // Acciones para usuario autenticado (Notificaciones y Perfil)
+      // Acciones para usuario autenticado
       return [
         Stack(
           children: [
@@ -121,40 +119,38 @@ class Menu_Bar extends StatelessWidget implements PreferredSizeWidget {
         const SizedBox(width: 8),
       ];
     } else {
-      // Acciones para usuario NO autenticado (Botones de Login/Signup)
+      // Acciones para usuario NO autenticado
       return [
         ElevatedButton(
           style: ElevatedButton.styleFrom(
             foregroundColor: const Color.fromARGB(255, 0, 0, 0),
             backgroundColor: const Color.fromARGB(255, 255, 153, 0),
             elevation: 0,
-            padding: const EdgeInsets.symmetric(horizontal: 4), // Reducir padding
+            padding: const EdgeInsets.symmetric(horizontal: 4),
           ),
           onPressed: onLoginPressed ?? () {
             Navigator.pushNamed(context, 'inicio_usuarios');
           },
-          child: const Text('Login', style: TextStyle(fontSize: 12)), // Reducir texto
+          child: const Text('Login', style: TextStyle(fontSize: 12)),
         ),
-        // Espacio reducido
         const SizedBox(width: 4),
         ElevatedButton(
           style: ElevatedButton.styleFrom(
             foregroundColor: const Color.fromARGB(255, 255, 255, 255),
             backgroundColor: const Color(0xFF0F3B81),
             elevation: 0,
-            padding: const EdgeInsets.symmetric(horizontal: 4), // Reducir padding
-            side: const BorderSide(color: Color(0xFF0F3B81), width: 1), // Borde
+            padding: const EdgeInsets.symmetric(horizontal: 4),
+            side: const BorderSide(color: Color(0xFF0F3B81), width: 1),
           ),
           onPressed: onSignUpPressed ?? () {
             Navigator.pushNamed(context, 'crear_cuenta');
           },
-          child: const Text('Signup', style: TextStyle(fontSize: 12)), // Reducir texto
+          child: const Text('Signup', style: TextStyle(fontSize: 12)),
         ),
         const SizedBox(width: 8),
       ];
     }
   }
-  // ... (preferredSize se mantiene igual)
 
   @override
   Size get preferredSize => Size.fromHeight(toolbarHeight);

@@ -64,9 +64,9 @@ class _RegistroFormState extends State<RegistroForm> {
   Future<void> _registerGoogle() async {
     try {
       final credential = await widget.googleService.singInWithGoogle();
-      if (credential?.user == null) return;
+      if (credential.user == null) return;
 
-      await widget.authService.saveGoogleUser(credential!.user!);
+      await widget.authService.saveGoogleUser(credential.user!);
 
       Navigator.pop(context);
     } catch (e) {

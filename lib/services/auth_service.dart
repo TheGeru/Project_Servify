@@ -21,6 +21,10 @@ class AuthService {
       password: password,
     );
 
+    // CORRECCIÓN: Actualizar displayName en Firebase Auth
+    await cred.user?.updateDisplayName('$name $lastName');
+    
+    // Crear documento en Firestore
     await _createUserInFirestore(
       uid: cred.user!.uid,
       name: name,
@@ -40,7 +44,7 @@ class AuthService {
     return _auth.signInWithEmailAndPassword(email: email, password: password);
   }
 
-  //LOGIN CON GOOGLE
+  /// LOGIN CON GOOGLE
   Future<User?> signInWithGoogle() async {
     try {
       final credential = await _googleService.singInWithGoogle();
@@ -54,9 +58,7 @@ class AuthService {
     }
   }
 
-  /// -----------------------------
   /// CREAR EN FIRESTORE (REGISTRO NORMAL)
-  /// -----------------------------
   Future<void> _createUserInFirestore({
     required String uid,
     required String name,
@@ -69,41 +71,57 @@ class AuthService {
     if (!(await doc.get()).exists) {
       await doc.set({
         'uid': uid,
-        'name': name,
-        'lastName': lastName,
+        'nombre': name,           // CORRECCIÓN: Usar 'nombre' como en el modelo
+        'apellidos': lastName,    // CORRECCIÓN: Usar 'apellidos'
         'email': email,
-        'phone': phone,
-        'isProvider': false,
-        'role': 'user',
+        'telefono': phone,        // CORRECCIÓN: Usar 'telefono'
+        'tipo': 'user',           // CORRECCIÓN: Usar 'tipo'
+        'descripcion': null,
+        'fotoUrl': null,
+        'oficios': [],
         'createdAt': FieldValue.serverTimestamp(),
       });
     }
   }
 
-  /// -----------------------------
   /// CREAR O ACTUALIZAR DESPUÉS DE GOOGLE
-  /// -----------------------------
   Future<void> saveGoogleUser(User user) async {
     final doc = _firestore.collection('users').doc(user.uid);
 
+    // Separar nombre y apellidos del displayName
+    String nombre = '';
+    String apellidos = '';
+    
+    if (user.displayName != null && user.displayName!.isNotEmpty) {
+      final parts = user.displayName!.split(' ');
+      nombre = parts.first;
+      if (parts.length > 1) {
+        apellidos = parts.skip(1).join(' ');
+      }
+    }
+
     if (!(await doc.get()).exists) {
+      // Crear nuevo usuario de Google
       await doc.set({
         'uid': user.uid,
-        'name': user.displayName ?? '',
-        'lastName': '',
+        'nombre': nombre,
+        'apellidos': apellidos,
         'email': user.email ?? '',
-        'phone': '',
-        'photoURL': user.photoURL ?? '',
-        'isProvider': false,
-        'role': 'user',
+        'telefono': '',
+        'tipo': 'user',
+        'descripcion': null,
+        'fotoUrl': user.photoURL ?? '',
+        'oficios': [],
         'createdAt': FieldValue.serverTimestamp(),
       });
     } else {
-      // Si ya existe, solo actualizamos datos básicos
+      // Actualizar datos básicos si ya existe
       await doc.update({
-        'name': user.displayName ?? '',
-        'photoURL': user.photoURL ?? '',
+        'nombre': nombre,
+        'apellidos': apellidos,
+        'fotoUrl': user.photoURL ?? '',
         'email': user.email ?? '',
+        'updatedAt': FieldValue.serverTimestamp(),
       });
     }
   }

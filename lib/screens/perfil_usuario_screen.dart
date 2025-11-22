@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:project_servify/models/usuarios_model.dart';
-import 'package:project_servify/screens/add_service_screen.dart';
 import 'package:project_servify/screens/upgrade_to_provider_screen.dart';
 import 'package:project_servify/widgets/info_row.dart';
+//import 'package:firebase_auth/firebase_auth.dart';
 
 class PerfilUsuarioScreen extends StatelessWidget {
   final UsuarioModel userModel;
@@ -11,26 +11,30 @@ class PerfilUsuarioScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final bool isProvider = userModel.tipo == 'provider';
+    final bool isGuest = userModel.uid.isEmpty;
+
     return Scaffold(
       backgroundColor: const Color(0xFF0F3B81),
       appBar: AppBar(
-        backgroundColor: Colors.transparent, // Fondo transparente
-        elevation: 0, // Sin sombra
+        backgroundColor: Colors.transparent,
+        elevation: 0,
         leading: IconButton(
           icon: const Icon(
             Icons.arrow_back_ios,
             color: Colors.white,
-          ), // Ícono blanco
-          onPressed: () => Navigator.pushReplacementNamed(
-            context,
-            'home',
-          ), // Función de regreso manual
+          ),
+          onPressed: () => Navigator.pushReplacementNamed(context, 'home'),
+        ),
+        title: Text(
+          isProvider ? 'Perfil de Proveedor' : 'Perfil de Usuario',
+          style: const TextStyle(color: Colors.white),
         ),
       ),
       body: SingleChildScrollView(
         child: Column(
           children: [
-            // El resto de tu UI
+            // === SECCIÓN: FOTO DE PERFIL ===
             Container(
               width: double.infinity,
               padding: const EdgeInsets.symmetric(vertical: 20),
@@ -38,46 +42,101 @@ class PerfilUsuarioScreen extends StatelessWidget {
                 children: [
                   CircleAvatar(
                     radius: 100,
-                    backgroundColor: Colors.purple[100],
-                    child: const Icon(
-                      Icons.person,
+                    backgroundColor: isProvider ? Colors.orange[100] : Colors.purple[100],
+                    child: Icon(
+                      isProvider ? Icons.work : Icons.person,
                       size: 160,
-                      color: Colors.purple,
+                      color: isProvider ? Colors.orange : Colors.purple,
                     ),
                   ),
                   const SizedBox(height: 10),
-                  TextButton(
-                    onPressed: () {},
-                    child: const Text(
-                      'CAMBIAR FOTO',
-                      style: TextStyle(color: Colors.white),
+                  if (!isGuest)
+                    TextButton(
+                      onPressed: () {
+                        // TODO: Implementar cambio de foto
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text('Función de cambiar foto en desarrollo'),
+                          ),
+                        );
+                      },
+                      child: const Text(
+                        'CAMBIAR FOTO',
+                        style: TextStyle(color: Colors.white),
+                      ),
+                    ),
+                  // Badge de tipo de usuario
+                  Container(
+                    margin: const EdgeInsets.only(top: 10),
+                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+                    decoration: BoxDecoration(
+                      color: isProvider 
+                          ? Colors.orange.withOpacity(0.9) 
+                          : Colors.blue.withOpacity(0.9),
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: Text(
+                      isProvider ? '⭐ PROVEEDOR' : '👤 USUARIO',
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 14,
+                      ),
                     ),
                   ),
                 ],
               ),
             ),
             const SizedBox(height: 20),
-            // ... (Contenedor vacío)
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20),
-              child: Container(
-                width: double.infinity,
-                padding: const EdgeInsets.all(15),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(10),
-                  boxShadow: const [
-                    BoxShadow(
-                      color: Colors.black12,
-                      blurRadius: 4,
-                      offset: Offset(0, 2),
-                    ),
-                  ],
+
+            // === SECCIÓN: DESCRIPCIÓN (SOLO PROVEEDORES) ===
+            if (isProvider && userModel.descripcion != null && userModel.descripcion!.isNotEmpty)
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 20),
+                child: Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(15),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(10),
+                    boxShadow: const [
+                      BoxShadow(
+                        color: Colors.black12,
+                        blurRadius: 4,
+                        offset: Offset(0, 2),
+                      ),
+                    ],
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Row(
+                        children: [
+                          Icon(Icons.description, color: Colors.orange),
+                          SizedBox(width: 8),
+                          Text(
+                            'DESCRIPCIÓN DEL SERVICIO',
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 16,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const Divider(),
+                      const SizedBox(height: 8),
+                      Text(
+                        userModel.descripcion!,
+                        style: const TextStyle(fontSize: 14, height: 1.5),
+                      ),
+                    ],
+                  ),
                 ),
               ),
-            ),
-            const SizedBox(height: 20),
-            // ... (Contenedor de Información)
+            
+            if (isProvider) const SizedBox(height: 20),
+
+            // === SECCIÓN: INFORMACIÓN GENERAL ===
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 20),
               child: Container(
@@ -97,83 +156,231 @@ class PerfilUsuarioScreen extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      'INFORMACION',
-                      style: TextStyle(fontWeight: FontWeight.bold),
+                    Row(
+                      children: [
+                        Icon(
+                          isProvider ? Icons.business_center : Icons.person_outline,
+                          color: isProvider ? Colors.orange : Colors.blue,
+                        ),
+                        const SizedBox(width: 8),
+                        const Text(
+                          'INFORMACIÓN',
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 16,
+                          ),
+                        ),
+                      ],
                     ),
-                    ...(
-                      userModel.tipo == 'provider'
-                    ? [
-                      InfoRow(
-                        title: "Descripcion",
-                        value: userModel.descripcion ?? "Sin descripcion",
+                    const Divider(),
+                    const SizedBox(height: 10),
+                    
+                    // Información común
+                    if (!isGuest) ...[
+                      InfoRow(title: "Nombre Completo", value: "${userModel.nombre} ${userModel.apellidos}"),
+                      InfoRow(title: "Correo", value: userModel.email),
+                      InfoRow(title: "Teléfono", value: userModel.telefono.isEmpty ? 'No especificado' : userModel.telefono),
+                    ],
+
+                    // Información específica de proveedor
+                    if (isProvider && userModel.oficios != null && userModel.oficios!.isNotEmpty) ...[
+                      const SizedBox(height: 10),
+                      const Text(
+                        'Oficios / Especialidades:',
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 14,
+                        ),
                       ),
-                    ]: [
-                    SizedBox(height: 10),
-                    InfoRow(title: "Nombre", value: userModel.nombre),
-                    InfoRow(title: "Apellido", value: userModel.apellidos),
-                    InfoRow(title: "Correo", value: userModel.email),
-                    InfoRow(title: "Telefono", value: userModel.telefono),
-                    ]),
+                      const SizedBox(height: 8),
+                      Wrap(
+                        spacing: 8,
+                        runSpacing: 8,
+                        children: userModel.oficios!.map((oficio) {
+                          return Chip(
+                            label: Text(oficio),
+                            backgroundColor: Colors.orange.shade100,
+                            avatar: const Icon(Icons.check_circle, size: 16, color: Colors.orange),
+                          );
+                        }).toList(),
+                      ),
+                    ],
+
+                    // Mensaje para invitados
+                    if (isGuest) 
+                      const Center(
+                        child: Padding(
+                          padding: EdgeInsets.all(20.0),
+                          child: Text(
+                            'Inicia sesión para ver tu perfil completo',
+                            style: TextStyle(
+                              fontSize: 16,
+                              color: Colors.grey,
+                              fontStyle: FontStyle.italic,
+                            ),
+                          ),
+                        ),
+                      ),
                   ],
                 ),
               ),
             ),
             const SizedBox(height: 20),
-            // ...
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20),
-              child: Row( // <-- Ya no necesitamos mainAxisAlignment.spaceEvenly
-                children: [
-                  Expanded( // Hace que el botón ocupe 1/3 del espacio
-                    child: ElevatedButton(
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.orange,
-                        foregroundColor: Colors.white,
-                      ),
-                      onPressed: () {},
-                      child: const Text('EDITAR'),
-                    ),
-                  ),
-                  const SizedBox(width: 8), // Espacio entre botones
-                  Expanded( // Hace que el botón ocupe 1/3 del espacio
-                    child: ElevatedButton(
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.red,
-                        foregroundColor: Colors.white,
-                      ),
-                      onPressed: () {},
-                      child: const Text('ELIMINAR'),
-                    ),
-                  ),
-                  if (userModel.tipo == 'user') ...[
-                    const SizedBox(width: 8), // Espacio
-                    Expanded( // Hace que el botón ocupe 1/3 del espacio
-                      child: ElevatedButton(
+
+            // === SECCIÓN: BOTONES DE ACCIÓN ===
+            if (!isGuest)
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 20),
+                child: Row(
+                  children: [
+                    // Botón EDITAR
+                    Expanded(
+                      child: ElevatedButton.icon(
                         style: ElevatedButton.styleFrom(
-                          // NOTA: Usar el servicio correcto para el upgrade
-                          backgroundColor: const Color(0xFFFF6B35), 
+                          backgroundColor: Colors.orange,
                           foregroundColor: Colors.white,
-                          textStyle: const TextStyle(fontSize: 12), // Reducir fuente
+                          padding: const EdgeInsets.symmetric(vertical: 12),
                         ),
                         onPressed: () {
-                          // Navegar a la pantalla de conversión
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(builder: (_) => const UpgradeToProviderScreen()),
+                          // TODO: Implementar edición de perfil
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text('Función de editar en desarrollo'),
+                            ),
                           );
                         },
-                        // NOTA: Cambiamos el texto para que sea más corto si es posible.
-                        child: const Text('SER PROVEEDOR'), 
+                        icon: const Icon(Icons.edit, size: 18),
+                        label: const Text('EDITAR', style: TextStyle(fontSize: 12)),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    
+                    // Botón ELIMINAR CUENTA
+                    Expanded(
+                      child: ElevatedButton.icon(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.red,
+                          foregroundColor: Colors.white,
+                          padding: const EdgeInsets.symmetric(vertical: 12),
+                        ),
+                        onPressed: () {
+                          _showDeleteAccountDialog(context);
+                        },
+                        icon: const Icon(Icons.delete_forever, size: 18),
+                        label: const Text('ELIMINAR', style: TextStyle(fontSize: 12)),
+                      ),
+                    ),
+                    
+                    // Botón CONVERTIRSE EN PROVEEDOR (solo para usuarios normales)
+                    if (!isProvider) ...[
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: ElevatedButton.icon(
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: const Color(0xFFFF6B35),
+                            foregroundColor: Colors.white,
+                            padding: const EdgeInsets.symmetric(vertical: 12),
+                          ),
+                          onPressed: () async {
+                            // Navegar a la pantalla de upgrade
+                            final result = await Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) => const UpgradeToProviderScreen(),
+                              ),
+                            );
+                            
+                            // Si se completó el upgrade, forzar recarga
+                            if (result == true && context.mounted) {
+                              Navigator.pushReplacementNamed(context, 'home');
+                            }
+                          },
+                          icon: const Icon(Icons.upgrade, size: 18),
+                          label: const Text(
+                            'SER PROVEEDOR',
+                            style: TextStyle(fontSize: 11),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+            
+            const SizedBox(height: 30),
+
+            // === INFORMACIÓN ADICIONAL PARA INVITADOS ===
+            if (isGuest)
+              Padding(
+                padding: const EdgeInsets.all(20),
+                child: Column(
+                  children: [
+                    ElevatedButton(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.orange,
+                        minimumSize: const Size(double.infinity, 50),
+                      ),
+                      onPressed: () {
+                        Navigator.pushNamed(context, 'inicio_usuarios');
+                      },
+                      child: const Text(
+                        'INICIAR SESIÓN',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 16,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 10),
+                    TextButton(
+                      onPressed: () {
+                        Navigator.pushNamed(context, 'crear_cuenta');
+                      },
+                      child: const Text(
+                        '¿No tienes cuenta? Regístrate',
+                        style: TextStyle(color: Colors.white),
                       ),
                     ),
                   ],
-                ],
+                ),
               ),
-            ),
-            const SizedBox(height: 20),
           ],
         ),
+      ),
+    );
+  }
+
+  // Diálogo de confirmación para eliminar cuenta
+  void _showDeleteAccountDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('⚠️ Eliminar Cuenta'),
+        content: const Text(
+          '¿Estás seguro de que deseas eliminar tu cuenta?\n\n'
+          'Esta acción es IRREVERSIBLE y perderás todos tus datos.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('CANCELAR'),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+            onPressed: () async {
+              Navigator.pop(ctx);
+              // TODO: Implementar eliminación de cuenta
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text('Función de eliminar cuenta en desarrollo'),
+                  backgroundColor: Colors.red,
+                ),
+              );
+            },
+            child: const Text('ELIMINAR', style: TextStyle(color: Colors.white)),
+          ),
+        ],
       ),
     );
   }

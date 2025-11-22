@@ -2,15 +2,14 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
-import 'package:project_servify/screens/history_screen.dart';
+//import 'package:project_servify/screens/history_screen.dart';
 import 'package:project_servify/screens/perfil_usuario_screen.dart';
 import 'package:project_servify/screens/service_detail_screen.dart';
 import 'package:project_servify/screens/add_service_screen.dart';
 import 'package:project_servify/screens/search_screen.dart';
 import 'package:project_servify/screens/notifications_screen.dart';
-import 'package:project_servify/screens/perfil_proveedor_screen.dart';
+//import 'package:project_servify/screens/perfil_proveedor_screen.dart';
 import 'package:project_servify/models/usuarios_model.dart';
-// Importamos la vista (el diseño)
 import 'package:project_servify/widgets/home_view.dart';
 import 'package:project_servify/widgets/card_container.dart';
 
@@ -23,9 +22,9 @@ class HomeScreen extends StatefulWidget {
   State<HomeScreen> createState() => _HomeScreenState();
 }
 
-class _HomeScreenState extends State<HomeScreen> {
-  // --- 1. PROPIEDADES (ESTADO Y DATOS) ---
+class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   int _selectedIndex = 0;
+  
   final List<Map<String, String>> allServices = const [
     {
       'titulo': 'Carpintería',
@@ -56,21 +55,38 @@ class _HomeScreenState extends State<HomeScreen> {
     },
   ];
 
-  // --- 2. MÉTODOS Y FUNCIONES (LÓGICA) ---
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    // CORRECCIÓN: Resetear índice cuando la app vuelve al foreground
+    if (state == AppLifecycleState.resumed) {
+      if (_selectedIndex > 2) {
+        setState(() => _selectedIndex = 0);
+      }
+    }
+  }
 
   void _onItemTapped(int index) {
-    final User? currentUser = FirebaseAuth.instance.currentUser;
-    final maxIndex = currentUser != null ? 2 : 2;
-
-    if (index > maxIndex) {
-      index = 0;
+    // CORRECCIÓN: Validar y normalizar el índice
+    final normalizedIndex = index.clamp(0, 2);
+    
+    if (_selectedIndex == normalizedIndex) {
+      return; // Ya estamos en esa pestaña
     }
-
+    
     setState(() {
-      _selectedIndex = index;
-      if (index != 0) {
-        Navigator.popUntil(context, (route) => route.isFirst);
-      }
+      _selectedIndex = normalizedIndex;
     });
   }
 
@@ -105,7 +121,6 @@ class _HomeScreenState extends State<HomeScreen> {
       context,
       MaterialPageRoute(
         builder: (context) => SearchScreen(
-          // Convertir la lista a Map<String, String> para compatibilidad de SearchScreen
           allServices: allServices
               .map((s) => s.map((k, v) => MapEntry(k, v.toString())))
               .toList(),
@@ -125,7 +140,34 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  // --- 3. CONSTRUCCIÓN (STREAM BUILDER) ---
+  // CORRECCIÓN: Método helper para crear widgets de forma consistente
+  List<Widget> _buildWidgetOptions(UsuarioModel? userModel) {
+    return [
+      _ServicesList(
+        navigateToServiceDetail: navigateToServiceDetail,
+        services: allServices,
+      ),
+      SearchScreen(
+        allServices: allServices,
+        navigateToServiceDetail: (ctx, title) {
+          final service = allServices.firstWhere(
+            (s) => s['titulo'] == title,
+          );
+          navigateToServiceDetail(ctx, service);
+        },
+      ),
+      PerfilUsuarioScreen(
+        userModel: userModel ?? UsuarioModel(
+          uid: '',
+          nombre: 'Invitado',
+          apellidos: '',
+          email: '',
+          telefono: '',
+          tipo: 'user',
+        ),
+      ),
+    ];
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -134,56 +176,33 @@ class _HomeScreenState extends State<HomeScreen> {
       builder: (context, snapshot) {
         final firebaseUser = snapshot.data;
 
-        if (firebaseUser == null && _selectedIndex > 2) {
-          WidgetsBinding.instance.addPostFrameCallback((_) {
-            if (mounted) {
-              setState(() => _selectedIndex = 0);
-              }
-            });
+        // CORRECCIÓN: Validar índice cuando cambia la autenticación
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (mounted && _selectedIndex > 2) {
+            setState(() => _selectedIndex = 0);
           }
-        // Si NO hay usuario autenticado → Home sin datos
+        });
+
+        // Usuario no autenticado
         if (firebaseUser == null) {
+          final widgetOptions = _buildWidgetOptions(null);
+          final safeIndex = _selectedIndex.clamp(0, widgetOptions.length - 1);
+
           return HomeView(
             user: null,
             userModel: null,
             allServices: allServices,
-            selectedIndex: _selectedIndex.clamp(0, 2),
-            widgetOptions: [
-              _ServicesList(
-                navigateToServiceDetail: navigateToServiceDetail,
-                services: allServices,
-              ),
-              SearchScreen(
-                allServices: allServices,
-                navigateToServiceDetail: (ctx, title) {
-                  final service = allServices.firstWhere(
-                    (s) => s['titulo'] == title,
-                  );
-                  navigateToServiceDetail(ctx, service);
-                },
-              ),
-              PerfilUsuarioScreen(
-                //podria mejorarse, segun no es la mejor opcion pero
-                //por tiempo es como lo pude arreglar
-                userModel: UsuarioModel(
-                  uid: '',
-                  nombre: 'Invitado',
-                  apellidos: '',
-                  email: '',
-                  telefono: '',
-                  tipo: 'user',
-                ),
-              ),
-            ],
-              onItemTapped: _onItemTapped,
-              navigateToSearch: navigateToSearch,
-              navigateToAddService: navigateToAddService,
-              navigateToNotifications: navigateToNotifications,
-              navigateToServiceDetail: navigateToServiceDetail,
+            selectedIndex: safeIndex,
+            widgetOptions: widgetOptions,
+            onItemTapped: _onItemTapped,
+            navigateToSearch: navigateToSearch,
+            navigateToAddService: navigateToAddService,
+            navigateToNotifications: navigateToNotifications,
+            navigateToServiceDetail: navigateToServiceDetail,
           );
         }
 
-        // SI hay usuario → Escuchar Firestore
+        // Usuario autenticado - Escuchar Firestore
         return StreamBuilder<DocumentSnapshot<Map<String, dynamic>>>(
           stream: FirebaseFirestore.instance
               .collection('users')
@@ -191,45 +210,41 @@ class _HomeScreenState extends State<HomeScreen> {
               .snapshots(),
           builder: (context, userSnapshot) {
             if (userSnapshot.connectionState == ConnectionState.waiting) {
-              return const Center(child: CircularProgressIndicator());
-            }
-
-            if (!userSnapshot.hasData || !userSnapshot.data!.exists) {
-              return const Center(
-                child: Text("Error cargando datos del usuario"),
+              return const Scaffold(
+                backgroundColor: Color.fromARGB(255, 25, 64, 119),
+                body: Center(child: CircularProgressIndicator()),
               );
             }
 
-            // Aquí usamos el snapshot correcto (userSnapshot)
+            if (!userSnapshot.hasData || !userSnapshot.data!.exists) {
+              return const Scaffold(
+                backgroundColor: Color.fromARGB(255, 25, 64, 119),
+                body: Center(
+                  child: Text(
+                    "Error cargando datos del usuario",
+                    style: TextStyle(color: Colors.white),
+                  ),
+                ),
+              );
+            }
+
             final data = userSnapshot.data!.data()!;
             final usuarioModel = UsuarioModel.fromMap(data);
+
+            final widgetOptions = _buildWidgetOptions(usuarioModel);
+            final safeIndex = _selectedIndex.clamp(0, widgetOptions.length - 1);
 
             return HomeView(
               user: firebaseUser,
               userModel: usuarioModel,
               allServices: allServices,
-              selectedIndex: _selectedIndex.clamp(0, 2),
-              widgetOptions: [
-                _ServicesList(
-                  navigateToServiceDetail: navigateToServiceDetail,
-                  services: allServices,
-                ),
-                SearchScreen(
-                  allServices: allServices,
-                  navigateToServiceDetail: (ctx, title) {
-                    final service = allServices.firstWhere(
-                      (s) => s['titulo'] == title,
-                    );
-                    navigateToServiceDetail(ctx, service);
-                  },
-                ),
-                PerfilUsuarioScreen(userModel: usuarioModel),
-              ],
-                onItemTapped: _onItemTapped,
-                navigateToSearch: navigateToSearch,
-                navigateToAddService: navigateToAddService,
-                navigateToNotifications: navigateToNotifications,
-                navigateToServiceDetail: navigateToServiceDetail,
+              selectedIndex: safeIndex,
+              widgetOptions: widgetOptions,
+              onItemTapped: _onItemTapped,
+              navigateToSearch: navigateToSearch,
+              navigateToAddService: navigateToAddService,
+              navigateToNotifications: navigateToNotifications,
+              navigateToServiceDetail: navigateToServiceDetail,
             );
           },
         );
@@ -238,7 +253,6 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 }
 
-// Mantenemos _ServicesList aquí, o puedes moverlo también si lo deseas.
 class _ServicesList extends StatelessWidget {
   final Function(BuildContext, ServiceData) navigateToServiceDetail;
   final List<Map<String, String>> services;
