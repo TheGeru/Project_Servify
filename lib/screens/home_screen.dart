@@ -2,14 +2,16 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
-//import 'package:project_servify/screens/history_screen.dart';
+import 'package:project_servify/screens/history_screen.dart';
 import 'package:project_servify/screens/perfil_usuario_screen.dart';
 import 'package:project_servify/screens/service_detail_screen.dart';
 import 'package:project_servify/screens/add_service_screen.dart';
+import 'package:project_servify/screens/edit_service_screen.dart';
 import 'package:project_servify/screens/search_screen.dart';
 import 'package:project_servify/screens/notifications_screen.dart';
-//import 'package:project_servify/screens/perfil_proveedor_screen.dart';
 import 'package:project_servify/models/usuarios_model.dart';
+import 'package:project_servify/models/anuncios_model.dart';
+import 'package:project_servify/services/anuncios_service.dart';
 import 'package:project_servify/widgets/home_view.dart';
 import 'package:project_servify/widgets/card_container.dart';
 
@@ -24,36 +26,7 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   int _selectedIndex = 0;
-  
-  final List<Map<String, String>> allServices = const [
-    {
-      'titulo': 'Carpintería',
-      'categoria': 'Servicios',
-      'descripcion': 'Ofrecemos servicios de carpintería a medida.',
-    },
-    {
-      'titulo': 'Plomería',
-      'categoria': 'Servicios',
-      'descripcion': 'Reparación y mantenimiento de sistemas de plomería.',
-    },
-    {
-      'titulo': 'Electricidad',
-      'categoria': 'Servicios',
-      'descripcion':
-          'Instalación y reparación de sistemas eléctricos de tu casa u oficina.',
-    },
-    {
-      'titulo': 'Jardinería',
-      'categoria': 'Servicios',
-      'descripcion':
-          'Mantenimiento y diseño de jardines para tus áreas verdes.',
-    },
-    {
-      'titulo': 'Plomería Urgente',
-      'categoria': 'Servicios',
-      'descripcion': 'Mantenimiento y diseño de tus tuberías de tu casa.',
-    },
-  ];
+  final _anunciosService = AnunciosService();
 
   @override
   void initState() {
@@ -69,7 +42,6 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
-    // CORRECCIÓN: Resetear índice cuando la app vuelve al foreground
     if (state == AppLifecycleState.resumed) {
       if (_selectedIndex > 2) {
         setState(() => _selectedIndex = 0);
@@ -78,11 +50,10 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   }
 
   void _onItemTapped(int index) {
-    // CORRECCIÓN: Validar y normalizar el índice
     final normalizedIndex = index.clamp(0, 2);
     
     if (_selectedIndex == normalizedIndex) {
-      return; // Ya estamos en esa pestaña
+      return;
     }
     
     setState(() {
@@ -90,7 +61,18 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
     });
   }
 
-  void navigateToServiceDetail(BuildContext context, ServiceData serviceData) {
+  void navigateToServiceDetail(BuildContext context, AnuncioModel anuncio) {
+    // Convertir AnuncioModel a ServiceData para compatibilidad
+    final serviceData = {
+      'titulo': anuncio.titulo,
+      'descripcion': anuncio.descripcion,
+      'precio': anuncio.precio,
+      'categoria': anuncio.categoria ?? 'Servicios',
+      'descripcion_completa': anuncio.descripcion,
+      'proveedor_id': anuncio.proveedorId,
+      'imagenes': anuncio.imagenes,
+    };
+
     Navigator.push(
       context,
       MaterialPageRoute(
@@ -99,7 +81,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
     );
   }
 
-  void navigateToAddService(BuildContext context) {
+  void navigateToAddService(BuildContext context) async {
     final User? user = FirebaseAuth.instance.currentUser;
     if (user == null) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -109,10 +91,16 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
       );
       Navigator.pushNamed(context, 'inicio_usuarios');
     } else {
-      Navigator.push(
+      // Navegar y esperar resultado
+      final result = await Navigator.push(
         context,
         MaterialPageRoute(builder: (context) => const AddServiceScreen()),
       );
+      
+      // Si se creó un anuncio, refrescar la vista
+      if (result == true && mounted) {
+        setState(() {}); // Forzar rebuild para actualizar el stream
+      }
     }
   }
 
@@ -121,13 +109,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
       context,
       MaterialPageRoute(
         builder: (context) => SearchScreen(
-          allServices: allServices
-              .map((s) => s.map((k, v) => MapEntry(k, v.toString())))
-              .toList(),
-          navigateToServiceDetail: (ctx, title) {
-            final service = allServices.firstWhere((s) => s['titulo'] == title);
-            navigateToServiceDetail(ctx, service);
-          },
+          navigateToServiceDetail: navigateToServiceDetail,
         ),
       ),
     );
@@ -140,22 +122,17 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
     );
   }
 
-  // CORRECCIÓN: Método helper para crear widgets de forma consistente
   List<Widget> _buildWidgetOptions(UsuarioModel? userModel) {
     return [
-      _ServicesList(
+      // Vista principal con anuncios dinámicos
+      _AnunciosList(
+        anunciosService: _anunciosService,
         navigateToServiceDetail: navigateToServiceDetail,
-        services: allServices,
+        userModel: userModel,
       ),
-      SearchScreen(
-        allServices: allServices,
-        navigateToServiceDetail: (ctx, title) {
-          final service = allServices.firstWhere(
-            (s) => s['titulo'] == title,
-          );
-          navigateToServiceDetail(ctx, service);
-        },
-      ),
+      // Historial
+      const HistoryScreen(),
+      // Perfil
       PerfilUsuarioScreen(
         userModel: userModel ?? UsuarioModel(
           uid: '',
@@ -176,14 +153,12 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
       builder: (context, snapshot) {
         final firebaseUser = snapshot.data;
 
-        // CORRECCIÓN: Validar índice cuando cambia la autenticación
         WidgetsBinding.instance.addPostFrameCallback((_) {
           if (mounted && _selectedIndex > 2) {
             setState(() => _selectedIndex = 0);
           }
         });
 
-        // Usuario no autenticado
         if (firebaseUser == null) {
           final widgetOptions = _buildWidgetOptions(null);
           final safeIndex = _selectedIndex.clamp(0, widgetOptions.length - 1);
@@ -191,18 +166,17 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
           return HomeView(
             user: null,
             userModel: null,
-            allServices: allServices,
+            allServices: const [], // Ya no se usa
             selectedIndex: safeIndex,
             widgetOptions: widgetOptions,
             onItemTapped: _onItemTapped,
             navigateToSearch: navigateToSearch,
             navigateToAddService: navigateToAddService,
             navigateToNotifications: navigateToNotifications,
-            navigateToServiceDetail: navigateToServiceDetail,
+            navigateToServiceDetail: (ctx, data) {}, // No se usa más
           );
         }
 
-        // Usuario autenticado - Escuchar Firestore
         return StreamBuilder<DocumentSnapshot<Map<String, dynamic>>>(
           stream: FirebaseFirestore.instance
               .collection('users')
@@ -237,14 +211,14 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
             return HomeView(
               user: firebaseUser,
               userModel: usuarioModel,
-              allServices: allServices,
+              allServices: const [], // Ya no se usa
               selectedIndex: safeIndex,
               widgetOptions: widgetOptions,
               onItemTapped: _onItemTapped,
               navigateToSearch: navigateToSearch,
               navigateToAddService: navigateToAddService,
               navigateToNotifications: navigateToNotifications,
-              navigateToServiceDetail: navigateToServiceDetail,
+              navigateToServiceDetail: (ctx, data) {}, // No se usa más
             );
           },
         );
@@ -253,31 +227,151 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   }
 }
 
-class _ServicesList extends StatelessWidget {
-  final Function(BuildContext, ServiceData) navigateToServiceDetail;
-  final List<Map<String, String>> services;
+// Widget para mostrar lista de anuncios
+class _AnunciosList extends StatelessWidget {
+  final AnunciosService anunciosService;
+  final Function(BuildContext, AnuncioModel) navigateToServiceDetail;
+  final UsuarioModel? userModel;
 
-  const _ServicesList({
+  const _AnunciosList({
+    required this.anunciosService,
     required this.navigateToServiceDetail,
-    required this.services,
+    this.userModel,
   });
 
   @override
   Widget build(BuildContext context) {
-    return ListView(
-      children: [
-        ...services.map(
-          (service) => CardContainer(
-            titulo: service['titulo']!,
-            categoria: service['categoria']!,
-            descripcion: service['descripcion']!,
-            onTap: () {
-              navigateToServiceDetail(context, service);
-            },
-          ),
-        ),
-        const SizedBox(height: 80),
-      ],
+    return StreamBuilder<List<AnuncioModel>>(
+      stream: anunciosService.getAllAnuncios(),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Center(child: CircularProgressIndicator());
+        }
+
+        if (snapshot.hasError) {
+          return Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const Icon(Icons.error_outline, size: 60, color: Colors.red),
+                const SizedBox(height: 16),
+                Text(
+                  'Error al cargar servicios: ${snapshot.error}',
+                  textAlign: TextAlign.center,
+                ),
+              ],
+            ),
+          );
+        }
+
+        final anuncios = snapshot.data ?? [];
+
+        if (anuncios.isEmpty) {
+          return Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(Icons.inbox_outlined, size: 80, color: Colors.grey[400]),
+                const SizedBox(height: 16),
+                Text(
+                  'No hay servicios publicados aún',
+                  style: TextStyle(fontSize: 18, color: Colors.grey[600]),
+                ),
+                if (userModel?.tipo == 'provider') ...[
+                  const SizedBox(height: 16),
+                  const Text(
+                    '¡Sé el primero en publicar un servicio!',
+                    style: TextStyle(fontSize: 14, color: Colors.grey),
+                  ),
+                ],
+              ],
+            ),
+          );
+        }
+
+        return ListView.builder(
+          padding: const EdgeInsets.only(top: 10, bottom: 80),
+          itemCount: anuncios.length,
+          itemBuilder: (context, index) {
+            final anuncio = anuncios[index];
+            final isOwner = userModel?.uid == anuncio.proveedorId;
+
+            return AnuncioCard(
+              anuncio: anuncio,
+              onTap: () => navigateToServiceDetail(context, anuncio),
+              showProviderInfo: !isOwner,
+              onEdit: isOwner
+                  ? () async {
+                      // Navegar a pantalla de edición
+                      final result = await Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => EditServiceScreen(anuncio: anuncio),
+                        ),
+                      );
+                      // Si se editó, refrescar
+                      if (result == true && context.mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text('Vista actualizada'),
+                            duration: Duration(seconds: 1),
+                          ),
+                        );
+                      }
+                    }
+                  : null,
+              onDelete: isOwner
+                  ? () async {
+                      final confirm = await showDialog<bool>(
+                        context: context,
+                        builder: (ctx) => AlertDialog(
+                          title: const Text('Eliminar Anuncio'),
+                          content: const Text(
+                            '¿Estás seguro de eliminar este anuncio?',
+                          ),
+                          actions: [
+                            TextButton(
+                              onPressed: () => Navigator.pop(ctx, false),
+                              child: const Text('Cancelar'),
+                            ),
+                            ElevatedButton(
+                              onPressed: () => Navigator.pop(ctx, true),
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: Colors.red,
+                              ),
+                              child: const Text('Eliminar'),
+                            ),
+                          ],
+                        ),
+                      );
+
+                      if (confirm == true && context.mounted) {
+                        try {
+                          await anunciosService.deleteAnuncio(
+                            anuncio.id,
+                            anuncio.proveedorId,
+                          );
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text('Anuncio eliminado'),
+                              backgroundColor: Colors.green,
+                            ),
+                          );
+                        } catch (e) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text('Error: $e'),
+                              backgroundColor: Colors.red,
+                            ),
+                          );
+                        }
+                      }
+                    }
+                  : null,
+            );
+          },
+        );
+      },
     );
   }
 }

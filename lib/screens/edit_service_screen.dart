@@ -1,24 +1,24 @@
 import 'package:flutter/material.dart';
-import 'package:firebase_auth/firebase_auth.dart';
+import 'package:project_servify/models/anuncios_model.dart';
 import 'package:project_servify/services/anuncios_service.dart';
 
-class AddServiceScreen extends StatefulWidget {
-  const AddServiceScreen({super.key});
+class EditServiceScreen extends StatefulWidget {
+  final AnuncioModel anuncio;
+
+  const EditServiceScreen({super.key, required this.anuncio});
 
   @override
-  State<AddServiceScreen> createState() => _AddServiceScreenState();
+  State<EditServiceScreen> createState() => _EditServiceScreenState();
 }
 
-class _AddServiceScreenState extends State<AddServiceScreen> {
+class _EditServiceScreenState extends State<EditServiceScreen> {
   final _formKey = GlobalKey<FormState>();
   final _anunciosService = AnunciosService();
 
-  // Controladores
-  final TextEditingController _tituloController = TextEditingController();
-  final TextEditingController _descripcionController = TextEditingController();
-  final TextEditingController _precioController = TextEditingController();
+  late TextEditingController _tituloController;
+  late TextEditingController _descripcionController;
+  late TextEditingController _precioController;
 
-  // Categorías disponibles
   final List<String> _categorias = [
     'Electricidad',
     'Plomería',
@@ -36,6 +36,16 @@ class _AddServiceScreenState extends State<AddServiceScreen> {
   bool _isLoading = false;
 
   @override
+  void initState() {
+    super.initState();
+    // Inicializar con los datos existentes
+    _tituloController = TextEditingController(text: widget.anuncio.titulo);
+    _descripcionController = TextEditingController(text: widget.anuncio.descripcion);
+    _precioController = TextEditingController(text: widget.anuncio.precio.toString());
+    _categoriaSeleccionada = widget.anuncio.categoria;
+  }
+
+  @override
   void dispose() {
     _tituloController.dispose();
     _descripcionController.dispose();
@@ -43,8 +53,16 @@ class _AddServiceScreenState extends State<AddServiceScreen> {
     super.dispose();
   }
 
-  Future<void> _createAnuncio() async {
-    if (!_formKey.currentState!.validate()) return;
+  Future<void> _updateAnuncio() async {
+    if (!_formKey.currentState!.validate()) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Por favor completa todos los campos correctamente'),
+          backgroundColor: Colors.orange,
+        ),
+      );
+      return;
+    }
 
     if (_categoriaSeleccionada == null) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -61,12 +79,18 @@ class _AddServiceScreenState extends State<AddServiceScreen> {
     try {
       final precio = double.parse(_precioController.text.trim());
 
-      await _anunciosService.createAnuncio(
+      final anuncioActualizado = AnuncioModel(
+        id: widget.anuncio.id,
         titulo: _tituloController.text.trim(),
         descripcion: _descripcionController.text.trim(),
         precio: precio,
-        imagenes: [], // TODO: Implementar carga de imágenes
+        proveedorId: widget.anuncio.proveedorId,
+        imagenes: widget.anuncio.imagenes,
+        createdAt: widget.anuncio.createdAt,
+        categoria: _categoriaSeleccionada,
       );
+
+      await _anunciosService.updateAnuncio(anuncioActualizado);
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -75,19 +99,19 @@ class _AddServiceScreenState extends State<AddServiceScreen> {
               children: [
                 Icon(Icons.check_circle, color: Colors.white),
                 SizedBox(width: 10),
-                Text('¡Anuncio publicado exitosamente!'),
+                Text('¡Anuncio actualizado exitosamente!'),
               ],
             ),
             backgroundColor: Colors.green,
           ),
         );
-        Navigator.pop(context, true); // Retornar true para indicar éxito
+        Navigator.pop(context, true);
       }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Error al crear anuncio: $e'),
+            content: Text('Error al actualizar anuncio: $e'),
             backgroundColor: Colors.red,
           ),
         );
@@ -104,8 +128,8 @@ class _AddServiceScreenState extends State<AddServiceScreen> {
     return Scaffold(
       backgroundColor: Colors.grey[100],
       appBar: AppBar(
-        title: const Text('Publicar Nuevo Servicio'),
-        backgroundColor: const Color(0xFF0F3B81),
+        title: const Text('Editar Servicio'),
+        backgroundColor: Colors.orange,
         foregroundColor: Colors.white,
       ),
       body: SingleChildScrollView(
@@ -115,18 +139,17 @@ class _AddServiceScreenState extends State<AddServiceScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              // Encabezado informativo
               Card(
-                color: Colors.blue.shade50,
+                color: Colors.orange.shade50,
                 child: Padding(
                   padding: const EdgeInsets.all(16.0),
                   child: Row(
                     children: const [
-                      Icon(Icons.info_outline, color: Colors.blue),
+                      Icon(Icons.edit, color: Colors.orange),
                       SizedBox(width: 12),
                       Expanded(
                         child: Text(
-                          'Completa la información de tu servicio para que los clientes puedan encontrarte',
+                          'Modifica los campos que desees actualizar',
                           style: TextStyle(fontSize: 14),
                         ),
                       ),
@@ -136,13 +159,11 @@ class _AddServiceScreenState extends State<AddServiceScreen> {
               ),
               const SizedBox(height: 20),
 
-              // Campo: Título
               TextFormField(
                 controller: _tituloController,
                 decoration: InputDecoration(
                   labelText: 'Título del Servicio',
-                  hintText: 'Ej: Reparación de instalaciones eléctricas',
-                  prefixIcon: const Icon(Icons.title, color: Color(0xFF0F3B81)),
+                  prefixIcon: const Icon(Icons.title, color: Colors.orange),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(10),
                   ),
@@ -161,12 +182,11 @@ class _AddServiceScreenState extends State<AddServiceScreen> {
               ),
               const SizedBox(height: 16),
 
-              // Campo: Categoría
               DropdownButtonFormField<String>(
                 value: _categoriaSeleccionada,
                 decoration: InputDecoration(
                   labelText: 'Categoría',
-                  prefixIcon: const Icon(Icons.category, color: Color(0xFF0F3B81)),
+                  prefixIcon: const Icon(Icons.category, color: Colors.orange),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(10),
                   ),
@@ -182,26 +202,18 @@ class _AddServiceScreenState extends State<AddServiceScreen> {
                 onChanged: (value) {
                   setState(() => _categoriaSeleccionada = value);
                 },
-                validator: (value) {
-                  if (value == null) {
-                    return 'Selecciona una categoría';
-                  }
-                  return null;
-                },
               ),
               const SizedBox(height: 16),
 
-              // Campo: Descripción
               TextFormField(
                 controller: _descripcionController,
                 maxLines: 5,
                 decoration: InputDecoration(
                   labelText: 'Descripción Detallada',
-                  hintText: 'Describe tu servicio, experiencia, y qué incluye...',
                   alignLabelWithHint: true,
                   prefixIcon: const Padding(
                     padding: EdgeInsets.only(bottom: 60),
-                    child: Icon(Icons.description, color: Color(0xFF0F3B81)),
+                    child: Icon(Icons.description, color: Colors.orange),
                   ),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(10),
@@ -221,20 +233,17 @@ class _AddServiceScreenState extends State<AddServiceScreen> {
               ),
               const SizedBox(height: 16),
 
-              // Campo: Precio
               TextFormField(
                 controller: _precioController,
                 keyboardType: const TextInputType.numberWithOptions(decimal: true),
                 decoration: InputDecoration(
                   labelText: 'Precio (MXN)',
-                  hintText: 'Ej: 500.00',
-                  prefixIcon: const Icon(Icons.attach_money, color: Color(0xFF0F3B81)),
+                  prefixIcon: const Icon(Icons.attach_money, color: Colors.orange),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(10),
                   ),
                   filled: true,
                   fillColor: Colors.white,
-                  helperText: 'Puedes usar decimales (ej: 150.50)',
                 ),
                 validator: (value) {
                   if (value == null || value.isEmpty) {
@@ -249,11 +258,10 @@ class _AddServiceScreenState extends State<AddServiceScreen> {
               ),
               const SizedBox(height: 30),
 
-              // Botón: Publicar
               ElevatedButton(
-                onPressed: _isLoading ? null : _createAnuncio,
+                onPressed: _isLoading ? null : _updateAnuncio,
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF0F3B81),
+                  backgroundColor: Colors.orange,
                   foregroundColor: Colors.white,
                   padding: const EdgeInsets.symmetric(vertical: 16),
                   shape: RoundedRectangleBorder(
@@ -273,10 +281,10 @@ class _AddServiceScreenState extends State<AddServiceScreen> {
                     : const Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          Icon(Icons.publish),
+                          Icon(Icons.save),
                           SizedBox(width: 10),
                           Text(
-                            'PUBLICAR SERVICIO',
+                            'GUARDAR CAMBIOS',
                             style: TextStyle(
                               fontSize: 16,
                               fontWeight: FontWeight.bold,
@@ -287,7 +295,6 @@ class _AddServiceScreenState extends State<AddServiceScreen> {
               ),
               const SizedBox(height: 16),
 
-              // Botón: Cancelar
               TextButton(
                 onPressed: _isLoading ? null : () => Navigator.pop(context),
                 child: const Text(

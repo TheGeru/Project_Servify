@@ -103,14 +103,15 @@ class HomeView extends StatelessWidget {
               onItemTapped(0);
             },
           ),
-          ListTile(
-            leading: const Icon(Icons.search),
-            title: const Text('Buscar'),
+           ListTile(
+            leading: const Icon(Icons.history),
+            title: const Text('Historial'),
             onTap: () {
               Navigator.pop(context);
               onItemTapped(1);
             },
           ),
+
           ListTile(
             leading: const Icon(Icons.person),
             title: const Text('Perfil'),
