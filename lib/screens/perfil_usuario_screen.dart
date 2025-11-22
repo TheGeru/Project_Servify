@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:project_servify/models/usuarios_model.dart';
 import 'package:project_servify/screens/add_service_screen.dart';
+import 'package:project_servify/screens/upgrade_to_provider_screen.dart';
 import 'package:project_servify/widgets/info_row.dart';
 
 class PerfilUsuarioScreen extends StatelessWidget {
@@ -119,38 +120,54 @@ class PerfilUsuarioScreen extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 20),
+            // ...
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 20),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              child: Row( // <-- Ya no necesitamos mainAxisAlignment.spaceEvenly
                 children: [
-                  ElevatedButton(
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.orange,
-                      foregroundColor: Colors.white,
+                  Expanded( // Hace que el botón ocupe 1/3 del espacio
+                    child: ElevatedButton(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.orange,
+                        foregroundColor: Colors.white,
+                      ),
+                      onPressed: () {},
+                      child: const Text('EDITAR'),
                     ),
-                    onPressed: () {},
-                    child: const Text('EDITAR'),
                   ),
-                  ElevatedButton(
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.red,
-                      foregroundColor: Colors.white,
+                  const SizedBox(width: 8), // Espacio entre botones
+                  Expanded( // Hace que el botón ocupe 1/3 del espacio
+                    child: ElevatedButton(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.red,
+                        foregroundColor: Colors.white,
+                      ),
+                      onPressed: () {},
+                      child: const Text('ELIMINAR'),
                     ),
-                    onPressed: () {},
-                    child: const Text('ELIMINAR'),
                   ),
-                  if (userModel.tipo == 'user')
-                    ElevatedButton(
-                      onPressed: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(builder: (_) => AddServiceScreen()
-                          ),
-                        );
-                      },
-                      child: const Text('Convertirme en en Proveedor'),
+                  if (userModel.tipo == 'user') ...[
+                    const SizedBox(width: 8), // Espacio
+                    Expanded( // Hace que el botón ocupe 1/3 del espacio
+                      child: ElevatedButton(
+                        style: ElevatedButton.styleFrom(
+                          // NOTA: Usar el servicio correcto para el upgrade
+                          backgroundColor: const Color(0xFFFF6B35), 
+                          foregroundColor: Colors.white,
+                          textStyle: const TextStyle(fontSize: 12), // Reducir fuente
+                        ),
+                        onPressed: () {
+                          // Navegar a la pantalla de conversión
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(builder: (_) => const UpgradeToProviderScreen()),
+                          );
+                        },
+                        // NOTA: Cambiamos el texto para que sea más corto si es posible.
+                        child: const Text('SER PROVEEDOR'), 
+                      ),
                     ),
+                  ],
                 ],
               ),
             ),

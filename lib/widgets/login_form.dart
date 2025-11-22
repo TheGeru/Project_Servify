@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:project_servify/services/auth_service.dart';
-import 'package:project_servify/services/google_services.dart';
 
 class LoginForm extends StatefulWidget {
   final AuthService authService;
+  
+
 
   const LoginForm({super.key, required this.authService});
 
@@ -45,7 +46,7 @@ class _LoginFormState extends State<LoginForm> {
     setState(() => _loading = true);
 
     try {
-      final user = await ();
+      final user = await widget.authService.signInWithGoogle();
 
       if (user != null) {
         Navigator.pop(context);

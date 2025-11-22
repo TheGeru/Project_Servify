@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
-import 'package:project_servify/screens/perfil_usuario_screen.dart';
 import 'firebase_options.dart';
-import 'package:project_servify/models/usuarios_model.dart';
 
 // Screens
 import 'package:project_servify/screens/home_screen.dart';

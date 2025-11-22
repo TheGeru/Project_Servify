@@ -4,7 +4,6 @@ import 'package:project_servify/screens/home_screen.dart';
 import 'package:project_servify/widgets/menu_bar.dart'; 
 import 'package:project_servify/models/usuarios_model.dart';
 import 'package:project_servify/screens/perfil_usuario_screen.dart';
-import 'package:project_servify/models/usuarios_model.dart';
 // Asegúrate de importar el archivo donde tienes Menu_Bar
 
 class HomeView extends StatelessWidget {

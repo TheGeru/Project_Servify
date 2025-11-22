@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:project_servify/widgets/menu_bar.dart';
 
 class PerfilProveedorScreen extends StatelessWidget {
   const PerfilProveedorScreen({super.key});
