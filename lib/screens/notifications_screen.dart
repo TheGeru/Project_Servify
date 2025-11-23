@@ -67,9 +67,6 @@ class NotificationsScreen extends StatelessWidget {
               final data = notifications[index].data() as Map<String, dynamic>;
               final isRead = data['read'] ?? false;
 
-              // Opcional: convertir timestamp a fecha legible
-              // final Timestamp? ts = data['createdAt'];
-
               return ListTile(
                 tileColor: isRead ? Colors.white : Colors.blue.shade50,
                 leading: CircleAvatar(
@@ -109,7 +106,7 @@ class NotificationsScreen extends StatelessWidget {
                   ],
                 ),
                 onTap: () {
-                  // Marcar como leída al tocar opcion
+                  // accion deMarcar como leída al tocar
                   if (!isRead) {
                     notifications[index].reference.update({'read': true});
                   }

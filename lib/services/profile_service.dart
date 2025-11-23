@@ -4,7 +4,7 @@ import 'package:project_servify/models/usuarios_model.dart';
 class ProfileService {
   final FirebaseFirestore _db = FirebaseFirestore.instance;
 
-  /// aqui se creara o actualizara el perfil del usuario en Firestore, asignándole el rol de proveedor.
+  /// se crea/actualiza el perfil del usuario en Firestore, asignándole el rol de proveedor.
   Future<void> upgradeToProvider({
     required String uid,
     required String email,

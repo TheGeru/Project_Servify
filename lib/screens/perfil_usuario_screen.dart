@@ -31,7 +31,7 @@ class PerfilUsuarioScreen extends StatelessWidget {
       body: SingleChildScrollView(
         child: Column(
           children: [
-            // SECCIÓN: FOTO DE PERFIL
+            // === SECCIÓN: FOTO DE PERFIL ===
             Container(
               width: double.infinity,
               padding: const EdgeInsets.symmetric(vertical: 20),
@@ -91,7 +91,7 @@ class PerfilUsuarioScreen extends StatelessWidget {
             ),
             const SizedBox(height: 20),
 
-            //SECCIÓN: DESCRIPCIÓN (SOLO PROVEEDORES)
+            // === SECCIÓN: DESCRIPCIÓN (SOLO PROVEEDORES) ===
             if (isProvider &&
                 userModel.descripcion != null &&
                 userModel.descripcion!.isNotEmpty)
@@ -139,6 +139,8 @@ class PerfilUsuarioScreen extends StatelessWidget {
               ),
 
             if (isProvider) const SizedBox(height: 20),
+
+            // === SECCIÓN: INFORMACIÓN GENERAL ===
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 20),
               child: Container(

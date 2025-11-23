@@ -76,7 +76,7 @@ class ServiceDetailScreen extends StatelessWidget {
         'No hay una descripción detallada disponible.';
     final serviceSchedule = serviceData['horario'] ?? 'Horario no especificado';
 
-    // Imagen (usando la primera si existe futuramente se puede hacer un carrusel)
+    // Imagen (usando la primera si existe)
     final List<dynamic> images = serviceData['imagenes'] ?? [];
     final String? firstImage = images.isNotEmpty ? images.first : null;
 
@@ -91,7 +91,7 @@ class ServiceDetailScreen extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            //  Banner/Imagen del Servicio
+            // Banner/Imagen del Servicio
             Container(
               height: 200,
               width: double.infinity,
@@ -166,7 +166,7 @@ class ServiceDetailScreen extends StatelessWidget {
 
             const SizedBox(height: 20),
 
-            //  Botón de Contacto Con Notificación
+            //  Botón de Contacto (Con Notificación)
             Center(
               child: ElevatedButton.icon(
                 onPressed: () async {
@@ -180,7 +180,7 @@ class ServiceDetailScreen extends StatelessWidget {
                     );
                     Navigator.pushNamed(context, 'inicio_usuarios');
                   } else {
-                    // Validar ID del proveedor
+                    // Validacion de ID del proveedor
                     if (providerId == null) {
                       ScaffoldMessenger.of(context).showSnackBar(
                         const SnackBar(
