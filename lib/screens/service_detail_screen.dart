@@ -1,19 +1,14 @@
 import 'package:flutter/material.dart';
-import 'package:project_servify/services/auth_service.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:project_servify/services/notification_service.dart';
 
-// Definición de la estructura de datos que se espera
 typedef ServiceData = Map<String, dynamic>;
 
 class ServiceDetailScreen extends StatelessWidget {
   final ServiceData serviceData;
-  // NOTA: Inicializamos aquí para evitar el error de constructor const
-  final AuthService _authService = AuthService();
 
-  // CORREGIDO: Eliminamos 'const' del constructor.
-  ServiceDetailScreen({super.key, required this.serviceData});
+  const ServiceDetailScreen({super.key, required this.serviceData});
 
-  // Widget para construir una sección de información
   Widget _buildInfoSection({
     required String title,
     required List<Widget> children,
@@ -45,7 +40,6 @@ class ServiceDetailScreen extends StatelessWidget {
     );
   }
 
-  // Widget para mostrar un detalle (etiqueta y valor)
   Widget _buildDetailRow(String label, String value, {bool isLarge = false}) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 4.0),
@@ -72,16 +66,19 @@ class ServiceDetailScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final User? user = FirebaseAuth.instance.currentUser;
 
-    // Uso de ?? 'Valor por defecto' para prevenir el error Null check operator
     final serviceTitle = serviceData['titulo'] ?? 'Servicio Desconocido';
     final providerName = serviceData['proveedor_nombre'] ?? 'Proveedor Anónimo';
+    final providerId =
+        serviceData['proveedor_id']; // ID necesario para notificación
     final serviceCategory = serviceData['categoria'] ?? 'Sin Categoría';
-    final serviceDescription =
-        serviceData['descripcion'] ?? 'Sin descripción breve.';
     final fullDescription =
         serviceData['descripcion_completa'] ??
         'No hay una descripción detallada disponible.';
     final serviceSchedule = serviceData['horario'] ?? 'Horario no especificado';
+
+    // Imagen (usando la primera si existe futuramente se puede hacer un carrusel)
+    final List<dynamic> images = serviceData['imagenes'] ?? [];
+    final String? firstImage = images.isNotEmpty ? images.first : null;
 
     return Scaffold(
       appBar: AppBar(
@@ -94,32 +91,41 @@ class ServiceDetailScreen extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // --- 1. Banner/Imagen del Servicio ---
+            //  Banner/Imagen del Servicio
             Container(
               height: 200,
               width: double.infinity,
               decoration: BoxDecoration(
                 color: Colors.grey[300],
                 borderRadius: BorderRadius.circular(10),
-                image: const DecorationImage(
-                  image: AssetImage('assets/images/servify_logo.png'),
-                  fit: BoxFit.contain,
-                ),
               ),
-              child: Center(
-                child: Text(
-                  serviceTitle,
-                  style: const TextStyle(
-                    color: Colors.black54,
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ),
+              child: firstImage != null
+                  ? ClipRRect(
+                      borderRadius: BorderRadius.circular(10),
+                      child: Image.network(firstImage, fit: BoxFit.cover),
+                    )
+                  : Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          const Icon(Icons.image, size: 50, color: Colors.grey),
+                          const SizedBox(height: 10),
+                          Text(
+                            serviceTitle,
+                            textAlign: TextAlign.center,
+                            style: const TextStyle(
+                              color: Colors.black54,
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
             ),
             const SizedBox(height: 20),
 
-            // --- 2. Descripción del Servicio ---
+            // Descripción del Servicio
             _buildInfoSection(
               title: 'Detalles del Servicio',
               icon: Icons.description,
@@ -135,7 +141,7 @@ class ServiceDetailScreen extends StatelessWidget {
               ],
             ),
 
-            // --- 3. Información del Proveedor ---
+            // Información del Proveedor
             _buildInfoSection(
               title: 'Información del Proveedor',
               icon: Icons.person_pin,
@@ -160,12 +166,11 @@ class ServiceDetailScreen extends StatelessWidget {
 
             const SizedBox(height: 20),
 
-            // --- 4. Botón de Contacto (Depende de Autenticación) ---
+            //  Botón de Contacto Con Notificación
             Center(
               child: ElevatedButton.icon(
-                onPressed: () {
+                onPressed: () async {
                   if (user == null) {
-                    // Si no está logueado, pide que inicie sesión
                     ScaffoldMessenger.of(context).showSnackBar(
                       const SnackBar(
                         content: Text(
@@ -175,14 +180,62 @@ class ServiceDetailScreen extends StatelessWidget {
                     );
                     Navigator.pushNamed(context, 'inicio_usuarios');
                   } else {
-                    // Lógica para contactar (e.g., abrir chat o formulario de cotización)
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text(
-                          'Iniciando contacto con $providerName...',
+                    // Validar ID del proveedor
+                    if (providerId == null) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text(
+                            'Error: No se pudo identificar al proveedor.',
+                          ),
                         ),
-                      ),
-                    );
+                      );
+                      return;
+                    }
+
+                    // Evitar auto-contacto
+                    if (providerId == user.uid) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text(
+                            'No puedes solicitar tu propio servicio.',
+                          ),
+                        ),
+                      );
+                      return;
+                    }
+
+                    // ENVIAR NOTIFICACIÓN
+                    final notiService = NotificationService();
+                    try {
+                      await notiService.sendNotification(
+                        toUserId: providerId,
+                        fromUserId: user.uid,
+                        fromUserName:
+                            user.displayName ?? 'Un cliente interesado',
+                        title: '¡Nueva solicitud de servicio!',
+                        body: 'Un cliente está interesado en: $serviceTitle',
+                        type: 'contact_request',
+                      );
+
+                      if (context.mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text(
+                              'Solicitud enviada a $providerName. Te contactará pronto.',
+                            ),
+                            backgroundColor: Colors.green,
+                          ),
+                        );
+                      }
+                    } catch (e) {
+                      if (context.mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text('Error al enviar solicitud: $e'),
+                          ),
+                        );
+                      }
+                    }
                   }
                 },
                 icon: const Icon(Icons.contact_mail),
@@ -208,6 +261,7 @@ class ServiceDetailScreen extends StatelessWidget {
                 ),
               ),
             ),
+            const SizedBox(height: 30),
           ],
         ),
       ),

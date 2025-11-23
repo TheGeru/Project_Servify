@@ -1,38 +1,123 @@
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:project_servify/services/notification_service.dart';
 
 class NotificationsScreen extends StatelessWidget {
   const NotificationsScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
+    final user = FirebaseAuth.instance.currentUser;
+    final notiService = NotificationService();
+
+    if (user == null) {
+      return Scaffold(
+        appBar: AppBar(title: const Text('Notificaciones')),
+        body: const Center(
+          child: Text("Inicia sesión para ver notificaciones"),
+        ),
+      );
+    }
+
     return Scaffold(
-      appBar: AppBar(title: const Text('Notificaciones')),
-      body: ListView(
-        children: const [
-          ListTile(
-            leading: Icon(
-              Icons.circle_notifications,
-              color: Color.fromARGB(255, 31, 122, 158),
-            ),
-            title: Text('Nueva cotización recibida.'),
-            subtitle: Text('Plomería - Hace 5 minutos'),
-            trailing: Icon(Icons.arrow_forward_ios, size: 14),
-          ),
-          Divider(),
-          ListTile(
-            leading: Icon(Icons.circle_notifications, color: Colors.grey),
-            title: Text('Servicio de Carpintería completado.'),
-            subtitle: Text('Hace 2 horas'),
-            trailing: Icon(Icons.arrow_forward_ios, size: 14),
-          ),
-          Divider(),
-          Center(
-            child: Padding(
-              padding: EdgeInsets.all(20.0),
-              child: Text('Aquí se mostrarán las notificaciones.'),
-            ),
-          ),
-        ],
+      backgroundColor: Colors.grey[100],
+      appBar: AppBar(
+        title: const Text('Notificaciones'),
+        backgroundColor: const Color(0xFF0F3B81),
+        foregroundColor: Colors.white,
+      ),
+      body: StreamBuilder<QuerySnapshot>(
+        stream: notiService.getUserNotifications(user.uid),
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const Center(child: CircularProgressIndicator());
+          }
+
+          if (snapshot.hasError) {
+            return Center(child: Text('Error: ${snapshot.error}'));
+          }
+
+          if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
+            return Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(
+                    Icons.notifications_off_outlined,
+                    size: 80,
+                    color: Colors.grey[400],
+                  ),
+                  const SizedBox(height: 16),
+                  Text(
+                    "No tienes notificaciones nuevas",
+                    style: TextStyle(fontSize: 16, color: Colors.grey[600]),
+                  ),
+                ],
+              ),
+            );
+          }
+
+          final notifications = snapshot.data!.docs;
+
+          return ListView.separated(
+            itemCount: notifications.length,
+            separatorBuilder: (ctx, i) => const Divider(height: 1, indent: 70),
+            itemBuilder: (context, index) {
+              final data = notifications[index].data() as Map<String, dynamic>;
+              final isRead = data['read'] ?? false;
+
+              // Opcional: convertir timestamp a fecha legible
+              // final Timestamp? ts = data['createdAt'];
+
+              return ListTile(
+                tileColor: isRead ? Colors.white : Colors.blue.shade50,
+                leading: CircleAvatar(
+                  backgroundColor: isRead
+                      ? Colors.grey.shade300
+                      : const Color(0xFFFF6B35),
+                  child: Icon(
+                    Icons.notifications,
+                    color: isRead ? Colors.grey : Colors.white,
+                    size: 20,
+                  ),
+                ),
+                title: Text(
+                  data['title'] ?? 'Notificación',
+                  style: TextStyle(
+                    fontWeight: isRead ? FontWeight.normal : FontWeight.bold,
+                    color: Colors.black87,
+                  ),
+                ),
+                subtitle: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const SizedBox(height: 4),
+                    Text(
+                      data['body'] ?? '',
+                      style: TextStyle(color: Colors.grey[800]),
+                    ),
+                    const SizedBox(height: 6),
+                    Text(
+                      'De: ${data['fromUserName'] ?? 'Usuario'}',
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: Colors.grey[600],
+                        fontStyle: FontStyle.italic,
+                      ),
+                    ),
+                  ],
+                ),
+                onTap: () {
+                  // Marcar como leída al tocar opcion
+                  if (!isRead) {
+                    notifications[index].reference.update({'read': true});
+                  }
+                },
+              );
+            },
+          );
+        },
       ),
     );
   }

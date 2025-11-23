@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:project_servify/models/usuarios_model.dart';
 import 'package:project_servify/screens/upgrade_to_provider_screen.dart';
+import 'package:project_servify/screens/edit_profile_screen.dart';
 import 'package:project_servify/widgets/info_row.dart';
-//import 'package:firebase_auth/firebase_auth.dart';
 
 class PerfilUsuarioScreen extends StatelessWidget {
   final UsuarioModel userModel;
@@ -20,10 +20,7 @@ class PerfilUsuarioScreen extends StatelessWidget {
         backgroundColor: Colors.transparent,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(
-            Icons.arrow_back_ios,
-            color: Colors.white,
-          ),
+          icon: const Icon(Icons.arrow_back_ios, color: Colors.white),
           onPressed: () => Navigator.pushReplacementNamed(context, 'home'),
         ),
         title: Text(
@@ -34,7 +31,7 @@ class PerfilUsuarioScreen extends StatelessWidget {
       body: SingleChildScrollView(
         child: Column(
           children: [
-            // === SECCIÓN: FOTO DE PERFIL ===
+            // SECCIÓN: FOTO DE PERFIL
             Container(
               width: double.infinity,
               padding: const EdgeInsets.symmetric(vertical: 20),
@@ -42,7 +39,9 @@ class PerfilUsuarioScreen extends StatelessWidget {
                 children: [
                   CircleAvatar(
                     radius: 100,
-                    backgroundColor: isProvider ? Colors.orange[100] : Colors.purple[100],
+                    backgroundColor: isProvider
+                        ? Colors.orange[100]
+                        : Colors.purple[100],
                     child: Icon(
                       isProvider ? Icons.work : Icons.person,
                       size: 160,
@@ -53,10 +52,11 @@ class PerfilUsuarioScreen extends StatelessWidget {
                   if (!isGuest)
                     TextButton(
                       onPressed: () {
-                        // TODO: Implementar cambio de foto
                         ScaffoldMessenger.of(context).showSnackBar(
                           const SnackBar(
-                            content: Text('Función de cambiar foto en desarrollo'),
+                            content: Text(
+                              'Función de cambiar foto en desarrollo',
+                            ),
                           ),
                         );
                       },
@@ -65,13 +65,15 @@ class PerfilUsuarioScreen extends StatelessWidget {
                         style: TextStyle(color: Colors.white),
                       ),
                     ),
-                  // Badge de tipo de usuario
                   Container(
                     margin: const EdgeInsets.only(top: 10),
-                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 20,
+                      vertical: 8,
+                    ),
                     decoration: BoxDecoration(
-                      color: isProvider 
-                          ? Colors.orange.withOpacity(0.9) 
+                      color: isProvider
+                          ? Colors.orange.withOpacity(0.9)
                           : Colors.blue.withOpacity(0.9),
                       borderRadius: BorderRadius.circular(20),
                     ),
@@ -89,8 +91,10 @@ class PerfilUsuarioScreen extends StatelessWidget {
             ),
             const SizedBox(height: 20),
 
-            // === SECCIÓN: DESCRIPCIÓN (SOLO PROVEEDORES) ===
-            if (isProvider && userModel.descripcion != null && userModel.descripcion!.isNotEmpty)
+            //SECCIÓN: DESCRIPCIÓN (SOLO PROVEEDORES)
+            if (isProvider &&
+                userModel.descripcion != null &&
+                userModel.descripcion!.isNotEmpty)
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 20),
                 child: Container(
@@ -133,10 +137,8 @@ class PerfilUsuarioScreen extends StatelessWidget {
                   ),
                 ),
               ),
-            
-            if (isProvider) const SizedBox(height: 20),
 
-            // === SECCIÓN: INFORMACIÓN GENERAL ===
+            if (isProvider) const SizedBox(height: 20),
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 20),
               child: Container(
@@ -159,7 +161,9 @@ class PerfilUsuarioScreen extends StatelessWidget {
                     Row(
                       children: [
                         Icon(
-                          isProvider ? Icons.business_center : Icons.person_outline,
+                          isProvider
+                              ? Icons.business_center
+                              : Icons.person_outline,
                           color: isProvider ? Colors.orange : Colors.blue,
                         ),
                         const SizedBox(width: 8),
@@ -174,16 +178,24 @@ class PerfilUsuarioScreen extends StatelessWidget {
                     ),
                     const Divider(),
                     const SizedBox(height: 10),
-                    
-                    // Información común
+
                     if (!isGuest) ...[
-                      InfoRow(title: "Nombre Completo", value: "${userModel.nombre} ${userModel.apellidos}"),
+                      InfoRow(
+                        title: "Nombre Completo",
+                        value: "${userModel.nombre} ${userModel.apellidos}",
+                      ),
                       InfoRow(title: "Correo", value: userModel.email),
-                      InfoRow(title: "Teléfono", value: userModel.telefono.isEmpty ? 'No especificado' : userModel.telefono),
+                      InfoRow(
+                        title: "Teléfono",
+                        value: userModel.telefono.isEmpty
+                            ? 'No especificado'
+                            : userModel.telefono,
+                      ),
                     ],
 
-                    // Información específica de proveedor
-                    if (isProvider && userModel.oficios != null && userModel.oficios!.isNotEmpty) ...[
+                    if (isProvider &&
+                        userModel.oficios != null &&
+                        userModel.oficios!.isNotEmpty) ...[
                       const SizedBox(height: 10),
                       const Text(
                         'Oficios / Especialidades:',
@@ -200,14 +212,17 @@ class PerfilUsuarioScreen extends StatelessWidget {
                           return Chip(
                             label: Text(oficio),
                             backgroundColor: Colors.orange.shade100,
-                            avatar: const Icon(Icons.check_circle, size: 16, color: Colors.orange),
+                            avatar: const Icon(
+                              Icons.check_circle,
+                              size: 16,
+                              color: Colors.orange,
+                            ),
                           );
                         }).toList(),
                       ),
                     ],
 
-                    // Mensaje para invitados
-                    if (isGuest) 
+                    if (isGuest)
                       const Center(
                         child: Padding(
                           padding: EdgeInsets.all(20.0),
@@ -233,7 +248,7 @@ class PerfilUsuarioScreen extends StatelessWidget {
                 padding: const EdgeInsets.symmetric(horizontal: 20),
                 child: Row(
                   children: [
-                    // Botón EDITAR
+                    // Botón EDITAR (ACTUALIZADO)
                     Expanded(
                       child: ElevatedButton.icon(
                         style: ElevatedButton.styleFrom(
@@ -241,20 +256,30 @@ class PerfilUsuarioScreen extends StatelessWidget {
                           foregroundColor: Colors.white,
                           padding: const EdgeInsets.symmetric(vertical: 12),
                         ),
-                        onPressed: () {
-                          // TODO: Implementar edición de perfil
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                              content: Text('Función de editar en desarrollo'),
+                        onPressed: () async {
+                          // Navegamos a la pantalla de edición
+                          final result = await Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) =>
+                                  EditProfileScreen(userModel: userModel),
                             ),
                           );
+
+                          // Si se editó con éxito, recargamos la vista home
+                          if (result == true && context.mounted) {
+                            Navigator.pushReplacementNamed(context, 'home');
+                          }
                         },
                         icon: const Icon(Icons.edit, size: 18),
-                        label: const Text('EDITAR', style: TextStyle(fontSize: 12)),
+                        label: const Text(
+                          'EDITAR',
+                          style: TextStyle(fontSize: 12),
+                        ),
                       ),
                     ),
                     const SizedBox(width: 8),
-                    
+
                     // Botón ELIMINAR CUENTA
                     Expanded(
                       child: ElevatedButton.icon(
@@ -267,11 +292,14 @@ class PerfilUsuarioScreen extends StatelessWidget {
                           _showDeleteAccountDialog(context);
                         },
                         icon: const Icon(Icons.delete_forever, size: 18),
-                        label: const Text('ELIMINAR', style: TextStyle(fontSize: 12)),
+                        label: const Text(
+                          'ELIMINAR',
+                          style: TextStyle(fontSize: 12),
+                        ),
                       ),
                     ),
-                    
-                    // Botón CONVERTIRSE EN PROVEEDOR (solo para usuarios normales)
+
+                    // Botón CONVERTIRSE EN PROVEEDOR
                     if (!isProvider) ...[
                       const SizedBox(width: 8),
                       Expanded(
@@ -282,15 +310,13 @@ class PerfilUsuarioScreen extends StatelessWidget {
                             padding: const EdgeInsets.symmetric(vertical: 12),
                           ),
                           onPressed: () async {
-                            // Navegar a la pantalla de upgrade
                             final result = await Navigator.push(
                               context,
                               MaterialPageRoute(
                                 builder: (_) => const UpgradeToProviderScreen(),
                               ),
                             );
-                            
-                            // Si se completó el upgrade, forzar recarga
+
                             if (result == true && context.mounted) {
                               Navigator.pushReplacementNamed(context, 'home');
                             }
@@ -306,10 +332,10 @@ class PerfilUsuarioScreen extends StatelessWidget {
                   ],
                 ),
               ),
-            
+
             const SizedBox(height: 30),
 
-            // === INFORMACIÓN ADICIONAL PARA INVITADOS ===
+            // Botones Login/Registro para invitados...
             if (isGuest)
               Padding(
                 padding: const EdgeInsets.all(20),
@@ -351,7 +377,6 @@ class PerfilUsuarioScreen extends StatelessWidget {
     );
   }
 
-  // Diálogo de confirmación para eliminar cuenta
   void _showDeleteAccountDialog(BuildContext context) {
     showDialog(
       context: context,
@@ -368,9 +393,8 @@ class PerfilUsuarioScreen extends StatelessWidget {
           ),
           ElevatedButton(
             style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
-            onPressed: () async {
+            onPressed: () {
               Navigator.pop(ctx);
-              // TODO: Implementar eliminación de cuenta
               ScaffoldMessenger.of(context).showSnackBar(
                 const SnackBar(
                   content: Text('Función de eliminar cuenta en desarrollo'),
@@ -378,7 +402,10 @@ class PerfilUsuarioScreen extends StatelessWidget {
                 ),
               );
             },
-            child: const Text('ELIMINAR', style: TextStyle(color: Colors.white)),
+            child: const Text(
+              'ELIMINAR',
+              style: TextStyle(color: Colors.white),
+            ),
           ),
         ],
       ),
