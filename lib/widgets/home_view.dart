@@ -61,12 +61,18 @@ class HomeView extends StatelessWidget {
             accountEmail: user != null 
                 ? Text(user!.email ?? "Correo no disponible")
                 : const Text("Inicia sesión o regístrate"), 
+            
+            // === AQUÍ ESTÁ EL CAMBIO IMPORTANTE ===
             currentAccountPicture: CircleAvatar(
               backgroundColor: Colors.white,
-              child: user?.photoURL != null
+              // 1. PRIMERO: Revisamos si hay foto en tu Base de Datos (Cloudinary)
+              child: (userModel?.fotoUrl != null && userModel!.fotoUrl!.isNotEmpty)
                   ? ClipOval(
                       child: Image.network(
-                        user!.photoURL!,
+                        userModel!.fotoUrl!,
+                        width: 90, // Forzamos tamaño para llenar el círculo
+                        height: 90,
+                        fit: BoxFit.cover,
                         errorBuilder: (_, __, ___) => const Icon(
                           Icons.person,
                           size: 40,
@@ -74,15 +80,33 @@ class HomeView extends StatelessWidget {
                         ),
                       ),
                     )
-                  : Text(
-                      _getInitials(user, userModel),
-                      style: const TextStyle(
-                        fontSize: 40.0,
-                        color: Color(0xFF1E3A8A),
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
+                  // 2. SEGUNDO: Si no, revisamos si hay foto de Google/Firebase
+                  : (user?.photoURL != null)
+                      ? ClipOval(
+                          child: Image.network(
+                            user!.photoURL!,
+                            width: 90,
+                            height: 90,
+                            fit: BoxFit.cover,
+                            errorBuilder: (_, __, ___) => const Icon(
+                              Icons.person,
+                              size: 40,
+                              color: Colors.grey,
+                            ),
+                          ),
+                        )
+                      // 3. TERCERO: Si no hay ninguna, ponemos iniciales
+                      : Text(
+                          _getInitials(user, userModel),
+                          style: const TextStyle(
+                            fontSize: 40.0,
+                            color: Color(0xFF1E3A8A),
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
             ),
+            // ======================================
+            
             decoration: const BoxDecoration(
               color: Color.fromARGB(255, 31, 122, 158),
             ),
@@ -112,14 +136,12 @@ class HomeView extends StatelessWidget {
               Navigator.pop(context);
               
               if (user != null && userModel != null) {
-                // CORRECCIÓN: Navegar directamente sin cambiar índice
                 Navigator.push(
                   context,
                   MaterialPageRoute(
                     builder: (_) => PerfilUsuarioScreen(userModel: userModel!),
                   ),
                 ).then((_) {
-                  // Al volver, asegurar que estamos en la pestaña correcta
                   if (selectedIndex != 0) {
                     onItemTapped(0);
                   }
@@ -145,7 +167,6 @@ class HomeView extends StatelessWidget {
                 Navigator.pop(context);
                 await FirebaseAuth.instance.signOut(); 
                 
-                // CORRECCIÓN: Resetear índice al cerrar sesión
                 onItemTapped(0);
                 
                 if (context.mounted) {
@@ -171,21 +192,17 @@ class HomeView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // CORRECCIÓN: Validar índice antes de usar
     final safeIndex = selectedIndex.clamp(0, widgetOptions.length - 1);
     
     return WillPopScope(
-      // CORRECCIÓN: Manejar el botón "atrás" correctamente
       onWillPop: () async {
         if (safeIndex != 0) {
-          // Si no estamos en Home, volver a Home
           onItemTapped(0);
-          return false; // No cerrar la app
+          return false;
         }
-        // Si estamos en Home, permitir cerrar la app
         return true;
       },
-child: Scaffold(
+      child: Scaffold(
         backgroundColor: const Color.fromARGB(255, 25, 64, 119),
         appBar: Menu_Bar(
           isAuthenticated: user != null,
