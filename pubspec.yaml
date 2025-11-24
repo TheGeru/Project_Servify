@@ -14,10 +14,11 @@ dependencies:
   firebase_auth: ^6.1.2  
   cloud_firestore: ^6.1.0
   google_sign_in: ^5.4.2
-  firebase_messaging: ^16.0.4 
+  firebase_messaging: ^16.0.4
+  http: ^1.2.0
+  googleapis_auth: ^1.6.0
 
   image_picker: ^1.0.4 
-  http: ^1.1.0          
   crypto: ^3.0.3
 
 dev_dependencies:
@@ -30,3 +31,4 @@ flutter:
   
   assets:
     - assets/images/servify_logo.png
+    - secrets/service_account.json

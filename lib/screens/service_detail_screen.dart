@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:project_servify/services/notification_service.dart';
+import 'package:project_servify/screens/chat_screen.dart';
 
 typedef ServiceData = Map<String, dynamic>;
 
@@ -210,11 +211,25 @@ class ServiceDetailScreen extends StatelessWidget {
                       await notiService.sendNotification(
                         toUserId: providerId,
                         fromUserId: user.uid,
-                        fromUserName:
-                            user.displayName ?? 'Un cliente interesado',
+                        fromUserName: user.displayName ?? 'Usuario',
                         title: '¡Nueva solicitud de servicio!',
-                        body: 'Un cliente está interesado en: $serviceTitle',
-                        type: 'contact_request',
+                        body:
+                            '${user.displayName ?? 'Un usuario'} Quiere consultar sobre: $serviceTitle',
+                        type: 'chat_request',
+                        metadata: {
+                          'chatPartnerId': user.uid,
+                          'chatPartnerName': user.displayName ?? 'Usuario',
+                        },
+                      );
+
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => ChatScreen(
+                            receiverUserId: providerId,
+                            receiverUserEmail: providerName,
+                          ),
+                        ),
                       );
 
                       if (context.mounted) {

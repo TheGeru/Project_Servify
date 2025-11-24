@@ -1,12 +1,33 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:project_servify/services/google_services.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 
 class AuthService {
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
   final GoogleAuthServices _googleService = GoogleAuthServices();
+
+  // Método auxiliar para guardar el token (úsalo al final del registro y del login)
+  Future<void> _saveFCMToken(String uid) async {
+    try {
+      // Pedimos permiso (crítico para iOS y Web)
+      await FirebaseMessaging.instance.requestPermission();
+      
+      // Obtenemos el token único del dispositivo
+      String? token = await FirebaseMessaging.instance.getToken();
+      
+      if (token != null) {
+        // Lo guardamos en el perfil del usuario
+        await _firestore.collection('users').doc(uid).update({
+          'pushToken': token, // <--- Nuevo campo
+        });
+      }
+    } catch (e) {
+      print("Error guardando token FCM: $e");
+    }
+  }
 
   /// REGISTRO TRADICIONAL
   Future<UserCredential> registerWithEmail({
@@ -32,16 +53,31 @@ class AuthService {
       email: email,
       phone: phone,
     );
-
+    
+    await _saveFCMToken(cred.user!.uid);
     return cred;
   }
+
+  
 
   /// LOGIN TRADICIONAL
   Future<UserCredential> loginWithEmail({
     required String email,
     required String password,
   }) async {
-    return _auth.signInWithEmailAndPassword(email: email, password: password);
+    // 1. Primero hacemos el login y guardamos el resultado en 'cred'
+    final cred = await _auth.signInWithEmailAndPassword(
+      email: email, 
+      password: password
+    );
+
+    // 2. Ahora que ya tenemos 'cred' y el usuario existe, guardamos el token
+    if (cred.user != null) {
+      await _saveFCMToken(cred.user!.uid);
+    }
+
+    // 3. Finalmente retornamos la credencial
+    return cred;
   }
 
   /// LOGIN CON GOOGLE
@@ -83,7 +119,6 @@ class AuthService {
       });
     }
   }
-
   /// CREAR O ACTUALIZAR DESPUÉS DE GOOGLE
   Future<void> saveGoogleUser(User user) async {
     final doc = _firestore.collection('users').doc(user.uid);
@@ -124,6 +159,7 @@ class AuthService {
         'updatedAt': FieldValue.serverTimestamp(),
       });
     }
+    await _saveFCMToken(user.uid);
   }
 
   Future<void> signOut() async {

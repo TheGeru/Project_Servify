@@ -2,6 +2,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:project_servify/services/notification_service.dart';
+import 'package:project_servify/screens/chat_screen.dart';
 
 class NotificationsScreen extends StatelessWidget {
   const NotificationsScreen({super.key});
@@ -109,6 +110,28 @@ class NotificationsScreen extends StatelessWidget {
                   // accion deMarcar como leída al tocar
                   if (!isRead) {
                     notifications[index].reference.update({'read': true});
+                  }
+
+                  if(data['type'] == 'chat_request' || data['type'] == 'contact_request') {
+                    // Navegar a la pantalla de chat
+                    final metadata = data['metadata'] as Map<String, dynamic>?;
+                    final fromUserId = data['fromUserId']; // Fallback si no hay metadata
+                    final fromUserName = data['fromUserName'];
+
+                    // El ID del otro usuario es 'fromUserId' (quien envió la noti)
+                    // O mejor, sácalo de metadata si lo guardaste ahí.
+                    final partnerId = metadata?['chatPartnerId'] ?? fromUserId;
+                    final partnerName = metadata?['chatPartnerName'] ?? fromUserName;
+
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => ChatScreen(
+                          receiverUserEmail: partnerName,
+                          receiverUserId: partnerId,
+                        ),
+                      ),
+                    );
                   }
                 },
               );

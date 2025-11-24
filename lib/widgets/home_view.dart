@@ -4,6 +4,7 @@ import 'package:project_servify/screens/home_screen.dart';
 import 'package:project_servify/widgets/menu_bar.dart'; 
 import 'package:project_servify/models/usuarios_model.dart';
 import 'package:project_servify/screens/perfil_usuario_screen.dart';
+import 'package:project_servify/screens/chat_list_screen.dart';
 
 // CORRECCIÓN: Función helper global para obtener iniciales de forma segura
 String _getInitials(User? user, UsuarioModel? userModel) {
@@ -25,6 +26,8 @@ class HomeView extends StatelessWidget {
   final List<Map<String, String>> allServices;
   final int selectedIndex;
   final List<Widget> widgetOptions;
+
+  final int notificationCount;
   
   final Function(int) onItemTapped;
   final Function(BuildContext, ServiceData) navigateToServiceDetail;
@@ -44,6 +47,7 @@ class HomeView extends StatelessWidget {
     required this.navigateToSearch,
     required this.navigateToAddService,
     required this.navigateToNotifications,
+    this.notificationCount = 0,
   });
 
   Drawer _buildDrawer(BuildContext context) {
@@ -129,6 +133,25 @@ class HomeView extends StatelessWidget {
             },
           ),
 
+          // === NUEVA OPCIÓN DE CHAT ===
+          ListTile(
+            leading: const Icon(Icons.chat_bubble_outline),
+            title: const Text('Mis Mensajes'),
+            onTap: () {
+              Navigator.pop(context); // Cerrar drawer
+              if (user != null) {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const ChatListScreen()),
+                );
+              } else {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Debes iniciar sesión')),
+                );
+              }
+            },
+          ),
+
           ListTile(
             leading: const Icon(Icons.person),
             title: const Text('Perfil'),
@@ -206,8 +229,8 @@ class HomeView extends StatelessWidget {
         backgroundColor: const Color.fromARGB(255, 25, 64, 119),
         appBar: Menu_Bar(
           isAuthenticated: user != null,
+          notificationCount: notificationCount,
           photoUrl: userModel?.fotoUrl,
-          notificationCount: 5,
           onSearchPressed: () => navigateToSearch(context),
           onNotificationPressed: () => navigateToNotifications(context),
           onProfilePressed: () {

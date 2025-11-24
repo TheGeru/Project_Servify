@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_messaging/firebase_messaging.dart'; // Importante
 import 'firebase_options.dart';
 
 // Screens
@@ -8,16 +9,60 @@ import 'package:project_servify/screens/inicio_usuarios_screen.dart';
 import 'package:project_servify/screens/crear_cuenta_screen.dart';
 import 'package:project_servify/screens/recuperar_pass_screen.dart';
 import 'package:project_servify/screens/notifications_screen.dart';
-void main() async {
-  WidgetsFlutterBinding.ensureInitialized();
+
+// 1. Handler de Background (Debe estar FUERA de cualquier clase)
+@pragma('vm:entry-point')
+Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
+  // Inicializamos Firebase para poder usarlo en segundo plano
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
+  print("Notificación en segundo plano recibida: ${message.messageId}");
+}
+
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  
+  await Firebase.initializeApp(
+    options: DefaultFirebaseOptions.currentPlatform,
+  );
+
+  // 2. Registramos el handler de background
+  FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
+
   runApp(const MainApp());
 }
 
-class MainApp extends StatelessWidget {
+// 3. Convertimos MainApp a StatefulWidget para usar initState
+class MainApp extends StatefulWidget {
   const MainApp({super.key});
+
+  @override
+  State<MainApp> createState() => _MainAppState();
+}
+
+class _MainAppState extends State<MainApp> {
+
+  @override
+  void initState() {
+    super.initState();
+    
+    // 4. Escuchar notificaciones en primer plano (App abierta)
+    FirebaseMessaging.onMessage.listen((RemoteMessage message) {
+      print('Notificación en primer plano: ${message.notification?.title}');
+      
+      if (message.notification != null) {
+        // Mostramos un aviso visual (SnackBar)
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('${message.notification!.title}: ${message.notification!.body}'),
+            backgroundColor: Colors.green,
+            duration: const Duration(seconds: 5),
+          ),
+        );
+      }
+    });
+  }
 
   @override
   Widget build(BuildContext context) {

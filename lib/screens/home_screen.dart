@@ -14,6 +14,7 @@ import 'package:project_servify/models/anuncios_model.dart';
 import 'package:project_servify/services/anuncios_service.dart';
 import 'package:project_servify/widgets/home_view.dart';
 import 'package:project_servify/widgets/card_container.dart';
+import 'package:project_servify/services/notification_service.dart';
 
 typedef ServiceData = Map<String, dynamic>;
 
@@ -27,6 +28,7 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   int _selectedIndex = 0;
   final _anunciosService = AnunciosService();
+  final _notificationService = NotificationService(); // Instancia el servicio
 
   @override
   void initState() {
@@ -166,14 +168,14 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
           return HomeView(
             user: null,
             userModel: null,
-            allServices: const [], // Ya no se usa
+            allServices: const [], 
             selectedIndex: safeIndex,
             widgetOptions: widgetOptions,
             onItemTapped: _onItemTapped,
             navigateToSearch: navigateToSearch,
             navigateToAddService: navigateToAddService,
             navigateToNotifications: navigateToNotifications,
-            navigateToServiceDetail: (ctx, data) {}, // No se usa más
+            navigateToServiceDetail: (ctx, data) {}, 
           );
         }
 
@@ -230,24 +232,40 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
             final widgetOptions = _buildWidgetOptions(usuarioModel);
             final safeIndex = _selectedIndex.clamp(0, widgetOptions.length - 1);
 
-            return HomeView(
-              user: firebaseUser,
-              userModel: usuarioModel,
-              allServices: const [], // Ya no se usa
-              selectedIndex: safeIndex,
-              widgetOptions: widgetOptions,
-              onItemTapped: _onItemTapped,
-              navigateToSearch: navigateToSearch,
-              navigateToAddService: navigateToAddService,
-              navigateToNotifications: navigateToNotifications,
-              navigateToServiceDetail: (ctx, data) {}, // No se usa más
-            );
+            // --- AQUÍ ESTABA EL ERROR ---
+            return StreamBuilder<QuerySnapshot>(
+              stream: _notificationService.getUserNotifications(firebaseUser.uid),
+              builder: (context, notiSnapshot) {
+                int unreadCount = 0;
+                if (notiSnapshot.hasData) {
+                  unreadCount = notiSnapshot.data!.docs
+                      .where((doc) => (doc.data() as Map<String, dynamic>)['read'] == false)
+                      .length;
+                } // 1. Faltaba cerrar esta llave del IF
+
+                // 2. El return HomeView debe estar DENTRO de este builder
+                return HomeView(
+                  user: firebaseUser,
+                  userModel: usuarioModel,
+                  allServices: const [], 
+                  selectedIndex: safeIndex,
+                  widgetOptions: widgetOptions,
+                  onItemTapped: _onItemTapped,
+                  navigateToSearch: navigateToSearch,
+                  navigateToAddService: navigateToAddService,
+                  navigateToNotifications: navigateToNotifications,
+                  navigateToServiceDetail: (ctx, data) {}, 
+                  notificationCount: unreadCount, // Pasamos el contador real
+                );
+              }, // 3. Cerramos el builder
+            ); // 4. Cerramos el StreamBuilder
           },
         );
       },
     );
   }
 }
+
 
 // Widget para mostrar lista de anuncios
 class _AnunciosList extends StatelessWidget {
