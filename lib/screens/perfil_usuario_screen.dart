@@ -400,7 +400,7 @@ class PerfilUsuarioScreen extends StatelessWidget {
     try {
       final profileService = ProfileService();
 
-      await profileService.updateProfilePhoto(user.uid, File(image.path));
+      await profileService.updateProfilePhoto(user.uid, image);
 
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Foto actualizada correctamente')),

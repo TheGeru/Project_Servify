@@ -1,5 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:flutter/material.dart'; // <--- ESTO FALTABA (O se perdió)
 import 'package:project_servify/models/usuarios_model.dart';
 import 'package:project_servify/services/anuncios_service.dart';
 import 'package:project_servify/services/cloudinary_service.dart';
@@ -65,7 +67,7 @@ class ProfileService {
     return null;
   }
 
-  Future<void> updateProfilePhoto(String uid, File newImageFile) async {
+  Future<void> updateProfilePhoto(String uid, XFile newImageFile) async {
     try {
       UsuarioModel? currentUser = await getUserData(uid);
 
@@ -74,7 +76,7 @@ class ProfileService {
       }
 
       final uploadResult = await _cloudinaryService.uploadImage(
-        newImageFile, 
+        newImageFile, // Convertimos File a XFile
         folder: 'user_profile' // Enviamos a la carpeta de usuarios
       );
 

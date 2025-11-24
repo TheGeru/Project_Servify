@@ -21,7 +21,7 @@ class _AddServiceScreenState extends State<AddServiceScreen> {
   final TextEditingController _precioController = TextEditingController();
 
   // Variable para la foto
-  File? _imagenSeleccionada;
+  XFile? _imagenSeleccionada;
 
   // Categorías disponibles
   final List<String> _categorias = [
@@ -55,7 +55,7 @@ class _AddServiceScreenState extends State<AddServiceScreen> {
 
     if (pickedFile != null) {
       setState(() {
-        _imagenSeleccionada = File(pickedFile.path);
+        _imagenSeleccionada = pickedFile;
       });
     }
   }
@@ -164,7 +164,7 @@ class _AddServiceScreenState extends State<AddServiceScreen> {
                     border: Border.all(color: Colors.grey),
                     image: _imagenSeleccionada != null
                         ? DecorationImage(
-                            image: FileImage(_imagenSeleccionada!),
+                            image: FileImage( File(_imagenSeleccionada!.path)),
                             fit: BoxFit.cover,
                           )
                         : null,

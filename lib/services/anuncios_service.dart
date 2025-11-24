@@ -1,7 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:project_servify/models/anuncios_model.dart';
-import 'dart:io';
 import 'package:project_servify/services/cloudinary_service.dart';
 
 class AnunciosService {
@@ -13,7 +13,7 @@ class AnunciosService {
     required String titulo,
     required String descripcion,
     required double precio,
-    File? imagenFile,
+    XFile? imagenFile,
   }) async {
     final user = _auth.currentUser;
     if (user == null) throw Exception('Usuario no autenticado');

@@ -23,7 +23,7 @@ class _EditServiceScreenState extends State<EditServiceScreen> {
   late TextEditingController _descripcionController;
   late TextEditingController _precioController;
 
-  File? _nuevaImagen; // Variable para la nueva foto si selecciona una
+  XFile? _nuevaImagen; // Variable para la nueva foto si selecciona una
 
   final List<String> _categorias = [
     'Electricidad',
@@ -58,18 +58,20 @@ class _EditServiceScreenState extends State<EditServiceScreen> {
     super.dispose();
   }
 
+  final ImagePicker _picker = ImagePicker();
   // Función para elegir nueva foto
   Future<void> _pickImage() async {
-    final picker = ImagePicker();
-    final XFile? pickedFile = await picker.pickImage(source: ImageSource.gallery);
+
+    final XFile? pickedFile = await _picker.pickImage(source: ImageSource.gallery);
 
     if (pickedFile != null) {
       setState(() {
-        _nuevaImagen = File(pickedFile.path);
+        _nuevaImagen = pickedFile;
       });
     }
   }
 
+  
   Future<void> _updateAnuncio() async {
     if (!_formKey.currentState!.validate()) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -201,7 +203,7 @@ class _EditServiceScreenState extends State<EditServiceScreen> {
                     border: Border.all(color: Colors.orange.shade200),
                     image: _nuevaImagen != null
                         ? DecorationImage(
-                            image: FileImage(_nuevaImagen!),
+                            image: FileImage(File(_nuevaImagen!.path)), // Usamos FileImage para XFile
                             fit: BoxFit.cover,
                           )
                         : (currentImageUrl != null

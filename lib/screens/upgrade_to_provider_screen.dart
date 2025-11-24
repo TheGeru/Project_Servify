@@ -23,7 +23,7 @@ class _UpgradeToProviderScreenState extends State<UpgradeToProviderScreen> {
   final _phoneController = TextEditingController();
   final _descriptionController = TextEditingController();
 
-  File? _imageFile; // Variable para la foto nueva
+  XFile? _imageFile; // Variable para la foto nueva
   String? _currentPhotoUrl; // Para mostrar la foto actual si ya tiene
   
   final List<String> _selectedOccupations = [];
@@ -104,7 +104,7 @@ class _UpgradeToProviderScreenState extends State<UpgradeToProviderScreen> {
 
     if (pickedFile != null) {
       setState(() {
-        _imageFile = File(pickedFile.path);
+        _imageFile = pickedFile;
       });
     }
   }
@@ -266,7 +266,7 @@ class _UpgradeToProviderScreenState extends State<UpgradeToProviderScreen> {
                         radius: 60,
                         backgroundColor: Colors.grey.shade200,
                         backgroundImage: _imageFile != null
-                            ? FileImage(_imageFile!) // Muestra la nueva si la seleccionó
+                            ? FileImage(File(_imageFile!.path)) // Muestra la nueva si la seleccionó
                             : (_currentPhotoUrl != null && _currentPhotoUrl!.isNotEmpty
                                 ? NetworkImage(_currentPhotoUrl!) // Muestra la vieja si existe
                                 : null) as ImageProvider?,
