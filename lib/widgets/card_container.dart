@@ -7,7 +7,7 @@ class AnuncioCard extends StatelessWidget {
   final AnuncioModel anuncio;
   final VoidCallback? onTap;
   final bool showProviderInfo; // Mostrar info del proveedor
-  final VoidCallback? onEdit;   // Callback para editar
+  final VoidCallback? onEdit; // Callback para editar
   final VoidCallback? onDelete; // Callback para eliminar
 
   const AnuncioCard({
@@ -32,16 +32,13 @@ class AnuncioCard extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Imagen del anuncio (si existe)
               if (anuncio.imagenes.isNotEmpty)
                 Container(
                   height: 180,
                   width: double.infinity,
-                  decoration: BoxDecoration(
-                    color: Colors.grey[300],
-                  ),
+                  decoration: BoxDecoration(color: Colors.grey[300]),
                   child: Image.network(
-                    anuncio.imagenes.first,
+                    anuncio.imagenes.first['url'],
                     fit: BoxFit.cover,
                     errorBuilder: (context, error, stackTrace) {
                       return Container(
@@ -150,7 +147,8 @@ class AnuncioCard extends StatelessWidget {
                             return const SizedBox.shrink();
                           }
 
-                          final proveedorData = snapshot.data?.data() as Map<String, dynamic>?;
+                          final proveedorData =
+                              snapshot.data?.data() as Map<String, dynamic>?;
                           if (proveedorData == null) {
                             return const SizedBox.shrink();
                           }
@@ -162,11 +160,20 @@ class AnuncioCard extends StatelessWidget {
                               CircleAvatar(
                                 radius: 16,
                                 backgroundColor: Colors.orange.shade100,
-                                child: Icon(
-                                  Icons.person,
-                                  size: 18,
-                                  color: Colors.orange.shade800,
-                                ),
+                                backgroundImage:
+                                    (proveedor.fotoUrl != null &&
+                                        proveedor.fotoUrl!.isNotEmpty)
+                                    ? NetworkImage(proveedor.fotoUrl!)
+                                    : null,
+                                child:
+                                    (proveedor.fotoUrl == null ||
+                                        proveedor.fotoUrl!.isEmpty)
+                                    ? Icon(
+                                        Icons.person,
+                                        size: 18,
+                                        color: Colors.orange.shade800,
+                                      )
+                                    : null,
                               ),
                               const SizedBox(width: 8),
                               Expanded(

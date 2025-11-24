@@ -1,5 +1,7 @@
+import 'dart:io'; // <--- 1. Importar dart:io
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:project_servify/services/anuncios_service.dart';
 
 class AddServiceScreen extends StatefulWidget {
@@ -17,6 +19,9 @@ class _AddServiceScreenState extends State<AddServiceScreen> {
   final TextEditingController _tituloController = TextEditingController();
   final TextEditingController _descripcionController = TextEditingController();
   final TextEditingController _precioController = TextEditingController();
+
+  // Variable para la foto
+  File? _imagenSeleccionada;
 
   // Categorías disponibles
   final List<String> _categorias = [
@@ -43,6 +48,18 @@ class _AddServiceScreenState extends State<AddServiceScreen> {
     super.dispose();
   }
 
+  // Función para seleccionar imagen de la galería
+  Future<void> _pickImage() async {
+    final picker = ImagePicker();
+    final XFile? pickedFile = await picker.pickImage(source: ImageSource.gallery);
+
+    if (pickedFile != null) {
+      setState(() {
+        _imagenSeleccionada = File(pickedFile.path);
+      });
+    }
+  }
+
   Future<void> _createAnuncio() async {
     if (!_formKey.currentState!.validate()) return;
 
@@ -65,7 +82,7 @@ class _AddServiceScreenState extends State<AddServiceScreen> {
         titulo: _tituloController.text.trim(),
         descripcion: _descripcionController.text.trim(),
         precio: precio,
-        imagenes: [], // TODO: Implementar carga de imágenes
+        imagenFile: _imagenSeleccionada, 
       );
 
       if (mounted) {
@@ -132,6 +149,39 @@ class _AddServiceScreenState extends State<AddServiceScreen> {
                       ),
                     ],
                   ),
+                ),
+              ),
+              const SizedBox(height: 20),
+
+              GestureDetector(
+                onTap: _pickImage,
+                child: Container(
+                  height: 200,
+                  width: double.infinity,
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(10),
+                    border: Border.all(color: Colors.grey),
+                    image: _imagenSeleccionada != null
+                        ? DecorationImage(
+                            image: FileImage(_imagenSeleccionada!),
+                            fit: BoxFit.cover,
+                          )
+                        : null,
+                  ),
+                  child: _imagenSeleccionada == null
+                      ? const Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(Icons.add_a_photo, size: 50, color: Color(0xFF0F3B81)), 
+                            SizedBox(height: 10),
+                            Text(
+                              "Toca para agregar una foto",
+                              style: TextStyle(color: Colors.grey),
+                            ),
+                          ],
+                        )
+                      : null,
                 ),
               ),
               const SizedBox(height: 20),

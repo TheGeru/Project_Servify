@@ -7,22 +7,15 @@ import 'package:project_servify/screens/perfil_usuario_screen.dart';
 
 // CORRECCIÓN: Función helper global para obtener iniciales de forma segura
 String _getInitials(User? user, UsuarioModel? userModel) {
-  // Prioridad 1: Nombre del modelo de usuario
   if (userModel != null && userModel.nombre.isNotEmpty) {
     return userModel.nombre[0].toUpperCase();
   }
-  
-  // Prioridad 2: DisplayName de Firebase
   if (user?.displayName != null && user!.displayName!.isNotEmpty) {
     return user.displayName![0].toUpperCase();
   }
-  
-  // Prioridad 3: Email
   if (user?.email != null && user!.email!.isNotEmpty) {
     return user.email![0].toUpperCase();
   }
-  
-  // Fallback: S de Servify
   return "S";
 }
 
@@ -192,15 +185,15 @@ class HomeView extends StatelessWidget {
         // Si estamos en Home, permitir cerrar la app
         return true;
       },
-      child: Scaffold(
+child: Scaffold(
         backgroundColor: const Color.fromARGB(255, 25, 64, 119),
         appBar: Menu_Bar(
           isAuthenticated: user != null,
+          photoUrl: userModel?.fotoUrl,
           notificationCount: 5,
           onSearchPressed: () => navigateToSearch(context),
           onNotificationPressed: () => navigateToNotifications(context),
           onProfilePressed: () {
-            // CORRECCIÓN: Usar navegación consistente
             if (user != null && userModel != null) {
               Navigator.push(
                 context,
@@ -208,7 +201,6 @@ class HomeView extends StatelessWidget {
                   builder: (_) => PerfilUsuarioScreen(userModel: userModel!),
                 ),
               ).then((_) {
-                // Al volver, asegurar que estamos en la vista correcta
                 if (safeIndex != 0) {
                   onItemTapped(0);
                 }
@@ -227,7 +219,6 @@ class HomeView extends StatelessWidget {
         ),
         drawer: _buildDrawer(context),
         body: IndexedStack(
-          // CORRECCIÓN: Usar IndexedStack en lugar de acceso directo
           index: safeIndex,
           children: widgetOptions,
         ),

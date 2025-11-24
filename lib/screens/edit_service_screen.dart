@@ -1,6 +1,9 @@
+import 'dart:io'; // <--- 1. Para manejar el archivo nuevo
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart'; // <--- 2. Para seleccionar foto
 import 'package:project_servify/models/anuncios_model.dart';
 import 'package:project_servify/services/anuncios_service.dart';
+import 'package:project_servify/services/cloudinary_service.dart'; // <--- 3. Para subir/borrar foto
 
 class EditServiceScreen extends StatefulWidget {
   final AnuncioModel anuncio;
@@ -14,10 +17,13 @@ class EditServiceScreen extends StatefulWidget {
 class _EditServiceScreenState extends State<EditServiceScreen> {
   final _formKey = GlobalKey<FormState>();
   final _anunciosService = AnunciosService();
+  final _cloudinaryService = CloudinaryService(); // Instancia para manejar la foto
 
   late TextEditingController _tituloController;
   late TextEditingController _descripcionController;
   late TextEditingController _precioController;
+
+  File? _nuevaImagen; // Variable para la nueva foto si selecciona una
 
   final List<String> _categorias = [
     'Electricidad',
@@ -38,7 +44,6 @@ class _EditServiceScreenState extends State<EditServiceScreen> {
   @override
   void initState() {
     super.initState();
-    // Inicializar con los datos existentes
     _tituloController = TextEditingController(text: widget.anuncio.titulo);
     _descripcionController = TextEditingController(text: widget.anuncio.descripcion);
     _precioController = TextEditingController(text: widget.anuncio.precio.toString());
@@ -51,6 +56,18 @@ class _EditServiceScreenState extends State<EditServiceScreen> {
     _descripcionController.dispose();
     _precioController.dispose();
     super.dispose();
+  }
+
+  // Función para elegir nueva foto
+  Future<void> _pickImage() async {
+    final picker = ImagePicker();
+    final XFile? pickedFile = await picker.pickImage(source: ImageSource.gallery);
+
+    if (pickedFile != null) {
+      setState(() {
+        _nuevaImagen = File(pickedFile.path);
+      });
+    }
   }
 
   Future<void> _updateAnuncio() async {
@@ -78,6 +95,33 @@ class _EditServiceScreenState extends State<EditServiceScreen> {
 
     try {
       final precio = double.parse(_precioController.text.trim());
+      
+      // Lista de imágenes final (empezamos con las que ya tenía)
+      List<Map<String, dynamic>> imagenesFinales = widget.anuncio.imagenes;
+
+      // SI EL USUARIO SELECCIONÓ UNA NUEVA FOTO:
+      if (_nuevaImagen != null) {
+        // 1. Subir la nueva foto
+        final result = await _cloudinaryService.uploadImage(
+          _nuevaImagen!, 
+          folder: 'services_images'
+        );
+
+        if (result != null) {
+          // 2. (Opcional) Borrar la foto anterior de Cloudinary si existía
+          if (widget.anuncio.imagenes.isNotEmpty) {
+             final oldPublicId = widget.anuncio.imagenes.first['public_id'];
+             if (oldPublicId != null) {
+               await _cloudinaryService.deleteImage(oldPublicId);
+             }
+          }
+
+          // 3. Reemplazar la lista con la nueva imagen
+          imagenesFinales = [
+            {'url': result['url'], 'public_id': result['public_id']}
+          ];
+        }
+      }
 
       final anuncioActualizado = AnuncioModel(
         id: widget.anuncio.id,
@@ -85,7 +129,7 @@ class _EditServiceScreenState extends State<EditServiceScreen> {
         descripcion: _descripcionController.text.trim(),
         precio: precio,
         proveedorId: widget.anuncio.proveedorId,
-        imagenes: widget.anuncio.imagenes,
+        imagenes: imagenesFinales, // Usamos la lista actualizada
         createdAt: widget.anuncio.createdAt,
         categoria: _categoriaSeleccionada,
       );
@@ -125,6 +169,12 @@ class _EditServiceScreenState extends State<EditServiceScreen> {
 
   @override
   Widget build(BuildContext context) {
+    // Verificar si hay imagen actual (URL)
+    String? currentImageUrl;
+    if (widget.anuncio.imagenes.isNotEmpty) {
+      currentImageUrl = widget.anuncio.imagenes.first['url'];
+    }
+
     return Scaffold(
       backgroundColor: Colors.grey[100],
       appBar: AppBar(
@@ -139,6 +189,51 @@ class _EditServiceScreenState extends State<EditServiceScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
+              // --- SECCIÓN DE FOTO ---
+              GestureDetector(
+                onTap: _pickImage,
+                child: Container(
+                  height: 200,
+                  width: double.infinity,
+                  decoration: BoxDecoration(
+                    color: Colors.grey[200],
+                    borderRadius: BorderRadius.circular(15),
+                    border: Border.all(color: Colors.orange.shade200),
+                    image: _nuevaImagen != null
+                        ? DecorationImage(
+                            image: FileImage(_nuevaImagen!),
+                            fit: BoxFit.cover,
+                          )
+                        : (currentImageUrl != null
+                            ? DecorationImage(
+                                image: NetworkImage(currentImageUrl),
+                                fit: BoxFit.cover,
+                              )
+                            : null),
+                  ),
+                  child: (_nuevaImagen == null && currentImageUrl == null)
+                      ? const Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(Icons.add_a_photo, size: 50, color: Colors.orange),
+                            Text("Agregar Foto", style: TextStyle(color: Colors.grey))
+                          ],
+                        )
+                      : Container(
+                          // Sombrita para que se note que se puede editar
+                          alignment: Alignment.bottomRight,
+                          padding: const EdgeInsets.all(10),
+                          child: const CircleAvatar(
+                            backgroundColor: Colors.white,
+                            radius: 20,
+                            child: Icon(Icons.edit, color: Colors.orange),
+                          ),
+                        ),
+                ),
+              ),
+              const SizedBox(height: 20),
+              // -----------------------
+
               Card(
                 color: Colors.orange.shade50,
                 child: Padding(

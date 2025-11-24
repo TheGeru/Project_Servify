@@ -16,6 +16,10 @@ dependencies:
   google_sign_in: ^5.4.2
   firebase_messaging: ^16.0.4 
 
+  image_picker: ^1.0.4 
+  http: ^1.1.0          
+  crypto: ^3.0.3
+
 dev_dependencies:
   flutter_test:
     sdk: flutter

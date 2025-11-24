@@ -1,8 +1,12 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:project_servify/models/usuarios_model.dart';
 import 'package:project_servify/screens/upgrade_to_provider_screen.dart';
 import 'package:project_servify/screens/edit_profile_screen.dart';
 import 'package:project_servify/widgets/info_row.dart';
+import 'package:project_servify/services/profile_service.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 class PerfilUsuarioScreen extends StatelessWidget {
   final UsuarioModel userModel;
@@ -42,23 +46,26 @@ class PerfilUsuarioScreen extends StatelessWidget {
                     backgroundColor: isProvider
                         ? Colors.orange[100]
                         : Colors.purple[100],
-                    child: Icon(
-                      isProvider ? Icons.work : Icons.person,
-                      size: 160,
-                      color: isProvider ? Colors.orange : Colors.purple,
-                    ),
+                    backgroundImage:
+                        (userModel.fotoUrl != null &&
+                            userModel.fotoUrl!.isNotEmpty)
+                        ? NetworkImage(userModel.fotoUrl!)
+                        : null,
+                    child:
+                        (userModel.fotoUrl == null ||
+                            userModel.fotoUrl!.isEmpty)
+                        ? Icon(
+                            isProvider ? Icons.work : Icons.person,
+                            size: 160,
+                            color: isProvider ? Colors.orange : Colors.purple,
+                          )
+                        : null,
                   ),
                   const SizedBox(height: 10),
                   if (!isGuest)
                     TextButton(
-                      onPressed: () {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            content: Text(
-                              'Función de cambiar foto en desarrollo',
-                            ),
-                          ),
-                        );
+                      onPressed: () async {
+                        await _cambiarFotoPerfil(context, userModel);
                       },
                       child: const Text(
                         'CAMBIAR FOTO',
@@ -379,14 +386,46 @@ class PerfilUsuarioScreen extends StatelessWidget {
     );
   }
 
+  Future<void> _cambiarFotoPerfil(
+    BuildContext context,
+    UsuarioModel user,
+  ) async {
+    final ImagePicker picker = ImagePicker();
+    final XFile? image = await picker.pickImage(source: ImageSource.gallery);
+
+    if (image == null) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Subiendo imagen... por favor espera')),
+    );
+    try {
+      final profileService = ProfileService();
+
+      await profileService.updateProfilePhoto(user.uid, File(image.path));
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Foto actualizada correctamente')),
+      );
+
+      Navigator.pushReplacementNamed(context, 'home');
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Error al actualizar foto: $e'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
+  }
+
   void _showDeleteAccountDialog(BuildContext context) {
     showDialog(
       context: context,
+      barrierDismissible: false,
       builder: (ctx) => AlertDialog(
         title: const Text('⚠️ Eliminar Cuenta'),
         content: const Text(
           '¿Estás seguro de que deseas eliminar tu cuenta?\n\n'
-          'Esta acción es IRREVERSIBLE y perderás todos tus datos.',
+          'Esta acción es IRREVERSIBLE.',
         ),
         actions: [
           TextButton(
@@ -395,14 +434,71 @@ class PerfilUsuarioScreen extends StatelessWidget {
           ),
           ElevatedButton(
             style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
-            onPressed: () {
+            onPressed: () async {
               Navigator.pop(ctx);
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text('Función de eliminar cuenta en desarrollo'),
-                  backgroundColor: Colors.red,
-                ),
+              showDialog(
+                context: context,
+                barrierDismissible: false,
+                builder: (c) =>
+                    const Center(child: CircularProgressIndicator()),
               );
+
+              try {
+                final profileService = ProfileService();
+                await profileService.deleteAccount();
+                if (context.mounted) {
+                  Navigator.pop(context);
+                  Navigator.pushNamedAndRemoveUntil(
+                    context,
+                    'home',
+                    (route) => false,
+                  );
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('Cuenta eliminada correctamente.'),
+                    ),
+                  );
+                }
+              } on FirebaseAuthException catch (e) {
+                if (context.mounted) {
+                  Navigator.pop(context);
+                  if (e.code == 'requires-recent-login') {
+                    await FirebaseAuth.instance.signOut();
+                    Navigator.pushNamedAndRemoveUntil(
+                      context,
+                      'home',
+                      (route) => false,
+                    );
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text(
+                          'Por seguridad, la sesión ha expirado. Entra a tu perfil nuevamente para eliminar.',
+                        ),
+                        duration: Duration(seconds: 5),
+                        backgroundColor: Colors.orange,
+                      ),
+                    );
+                  } else {
+                    // Otro error
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text('Error: ${e.message}'),
+                        backgroundColor: Colors.red,
+                      ),
+                    );
+                  }
+                }
+              } catch (e) {
+                if (context.mounted) {
+                  Navigator.pop(context);
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text('Error: $e'),
+                      backgroundColor: Colors.red,
+                    ),
+                  );
+                }
+              }
             },
             child: const Text(
               'ELIMINAR',

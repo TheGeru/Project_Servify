@@ -191,12 +191,34 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
             }
 
             if (!userSnapshot.hasData || !userSnapshot.data!.exists) {
-              return const Scaffold(
-                backgroundColor: Color.fromARGB(255, 25, 64, 119),
+              return Scaffold(
+                backgroundColor: const Color.fromARGB(255, 25, 64, 119),
                 body: Center(
-                  child: Text(
-                    "Error cargando datos del usuario",
-                    style: TextStyle(color: Colors.white),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const Icon(Icons.error_outline, size: 80, color: Colors.white54),
+                      const SizedBox(height: 20),
+                      const Text(
+                        "No se encontraron datos del usuario.\nEs posible que la cuenta haya sido eliminada.",
+                        textAlign: TextAlign.center,
+                        style: TextStyle(color: Colors.white, fontSize: 16),
+                      ),
+                      const SizedBox(height: 30),
+                      
+                      ElevatedButton.icon(
+                        onPressed: () async {
+                          await FirebaseAuth.instance.signOut();
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.white,
+                          foregroundColor: const Color.fromARGB(255, 25, 64, 119),
+                          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                        ),
+                        icon: const Icon(Icons.logout),
+                        label: const Text("CERRAR SESIÓN Y SALIR"),
+                      ),
+                    ],
                   ),
                 ),
               );

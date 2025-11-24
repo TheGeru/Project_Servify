@@ -78,7 +78,7 @@ class ServiceDetailScreen extends StatelessWidget {
 
     // Imagen (usando la primera si existe)
     final List<dynamic> images = serviceData['imagenes'] ?? [];
-    final String? firstImage = images.isNotEmpty ? images.first : null;
+    final String? firstImage = images.isNotEmpty ? images.first['url'] : null;
 
     return Scaffold(
       appBar: AppBar(

@@ -4,9 +4,10 @@ class AnuncioModel {
   String descripcion;
   double precio;
   String proveedorId;
-  List<String> imagenes;
-  DateTime? createdAt; // Opcional: fecha de creación
-  String? categoria;   // Opcional: categoría del servicio
+  // CAMBIO IMPORTANTE: Ahora es una lista de mapas, no de strings simples
+  List<Map<String, dynamic>> imagenes; 
+  DateTime? createdAt;
+  String? categoria;
 
   AnuncioModel({
     required this.id,
@@ -26,8 +27,9 @@ class AnuncioModel {
       descripcion: json["descripcion"] ?? '',
       precio: (json["precio"] ?? 0).toDouble(),
       proveedorId: json["proveedorId"] ?? '',
-      imagenes: json["imagenes"] != null 
-          ? List<String>.from(json["imagenes"]) 
+      // Convertimos la lista de JSON a Lista de Mapas
+      imagenes: json["imagenes"] != null
+          ? List<Map<String, dynamic>>.from(json["imagenes"])
           : [],
       createdAt: json["createdAt"] != null
           ? (json["createdAt"] as dynamic).toDate()
@@ -43,7 +45,7 @@ class AnuncioModel {
       "descripcion": descripcion,
       "precio": precio,
       "proveedorId": proveedorId,
-      "imagenes": imagenes,
+      "imagenes": imagenes, // Guardamos la estructura completa {url, public_id}
       "createdAt": createdAt ?? DateTime.now(),
       "categoria": categoria,
     };

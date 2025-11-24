@@ -1,30 +1,39 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:project_servify/models/anuncios_model.dart';
+import 'dart:io';
+import 'package:project_servify/services/cloudinary_service.dart';
 
 class AnunciosService {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   final FirebaseAuth _auth = FirebaseAuth.instance;
+  final CloudinaryService _cloudinaryService = CloudinaryService();
 
-  /// Crear un nuevo anuncio
   Future<String> createAnuncio({
     required String titulo,
     required String descripcion,
     required double precio,
-    List<String> imagenes = const [],
+    File? imagenFile,
   }) async {
     final user = _auth.currentUser;
-    if (user == null) {
-      throw Exception('Usuario no autenticado');
+    if (user == null) throw Exception('Usuario no autenticado');
+
+    List<Map<String, dynamic>> listaImagenes = [];
+    
+    if (imagenFile != null) {
+      final uploadResult = await _cloudinaryService.uploadImage(
+        imagenFile, 
+        folder: 'services_images'
+      );
+      
+      if (uploadResult != null) {
+        listaImagenes.add({
+          'url': uploadResult['url'],
+          'public_id': uploadResult['public_id'],
+        });
+      }
     }
 
-    // Verificar que el usuario sea proveedor
-    final userDoc = await _firestore.collection('users').doc(user.uid).get();
-    if (!userDoc.exists || userDoc.data()?['tipo'] != 'provider') {
-      throw Exception('Solo los proveedores pueden crear anuncios');
-    }
-
-    // Crear el documento del anuncio
     final docRef = _firestore.collection('anuncios').doc();
     
     final anuncio = AnuncioModel(
@@ -33,7 +42,7 @@ class AnunciosService {
       descripcion: descripcion,
       precio: precio,
       proveedorId: user.uid,
-      imagenes: imagenes,
+      imagenes: listaImagenes,
     );
 
     await docRef.set(anuncio.toMap());
@@ -41,7 +50,6 @@ class AnunciosService {
     return docRef.id;
   }
 
-  /// Obtener todos los anuncios (para el feed principal)
   Stream<List<AnuncioModel>> getAllAnuncios() {
     return _firestore
         .collection('anuncios')
@@ -108,4 +116,29 @@ class AnunciosService {
     final doc = await _firestore.collection('users').doc(proveedorId).get();
     return doc.data();
   }
+
+   /// Eliminar TODOS los anuncios de un proveedor (Para borrar cuenta)
+  Future<void> deleteAllAnunciosFromProvider(String providerId) async {
+    final snapshot = await _firestore
+        .collection('anuncios')
+        .where('proveedorId', isEqualTo: providerId)
+        .get();
+
+    for (var doc in snapshot.docs) {
+      final data = doc.data();
+
+      if (data['imagenes'] != null) {
+        List imgs = data['imagenes'];
+        for (var img in imgs) {
+           if (img is Map && img['public_id'] != null) {
+             await _cloudinaryService.deleteImage(img['public_id']);
+           }
+        }
+      }
+
+      // 3. Borrar el documento del anuncio
+      await doc.reference.delete();
+    }
+  }
+
 }

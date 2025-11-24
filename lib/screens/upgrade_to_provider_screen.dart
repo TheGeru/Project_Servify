@@ -1,7 +1,10 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:project_servify/services/profile_service.dart';
+import 'package:project_servify/services/cloudinary_service.dart';
 import 'package:project_servify/models/usuarios_model.dart';
 
 class UpgradeToProviderScreen extends StatefulWidget {
@@ -14,14 +17,16 @@ class UpgradeToProviderScreen extends StatefulWidget {
 
 class _UpgradeToProviderScreenState extends State<UpgradeToProviderScreen> {
   final _formKey = GlobalKey<FormState>();
-  final _profileService = ProfileService();
+  final _cloudinaryService = CloudinaryService(); // Instancia de Cloudinary
 
   // Controladores de campos
   final _phoneController = TextEditingController();
   final _descriptionController = TextEditingController();
 
-  // Datos de estado
-  final List<String> _selectedOccupations = []; // Cambiado a lista para múltiples oficios
+  File? _imageFile; // Variable para la foto nueva
+  String? _currentPhotoUrl; // Para mostrar la foto actual si ya tiene
+  
+  final List<String> _selectedOccupations = [];
   bool _isLoading = false;
   bool _isDataLoading = true;
 
@@ -64,6 +69,8 @@ class _UpgradeToProviderScreenState extends State<UpgradeToProviderScreen> {
         // Pre-llenar campos con datos existentes
         _phoneController.text = existingUser.telefono;
         _descriptionController.text = existingUser.descripcion ?? '';
+        
+        _currentPhotoUrl = existingUser.fotoUrl;
 
         // Cargar oficios existentes
         if (existingUser.oficios != null && existingUser.oficios!.isNotEmpty) {
@@ -90,14 +97,37 @@ class _UpgradeToProviderScreenState extends State<UpgradeToProviderScreen> {
     super.dispose();
   }
 
+  // --- FUNCIÓN PARA SELECCIONAR FOTO ---
+  Future<void> _pickImage() async {
+    final picker = ImagePicker();
+    final XFile? pickedFile = await picker.pickImage(source: ImageSource.gallery);
+
+    if (pickedFile != null) {
+      setState(() {
+        _imageFile = File(pickedFile.path);
+      });
+    }
+  }
+
   Future<void> _upgrade() async {
     if (!_formKey.currentState!.validate()) return;
 
-    // Validar que haya al menos un oficio seleccionado
+    // 1. VALIDACIÓN DE OFICIOS
     if (_selectedOccupations.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text("Debes seleccionar al menos un oficio."),
+          backgroundColor: Colors.orange,
+        ),
+      );
+      return;
+    }
+
+    // VALIDACIÓN DE FOTO
+    if (_imageFile == null && (_currentPhotoUrl == null || _currentPhotoUrl!.isEmpty)) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text("Es obligatorio subir una foto de perfil para ser proveedor."),
           backgroundColor: Colors.orange,
         ),
       );
@@ -115,20 +145,32 @@ class _UpgradeToProviderScreenState extends State<UpgradeToProviderScreen> {
     setState(() => _isLoading = true);
 
     try {
-      // Actualizar en Firestore directamente con múltiples oficios
-      await FirebaseFirestore.instance
-          .collection('users')
-          .doc(firebaseUser.uid)
-          .update({
+      Map<String, dynamic> updateData = {
         'tipo': 'provider',
         'telefono': _phoneController.text.trim(),
         'descripcion': _descriptionController.text.trim(),
         'oficios': _selectedOccupations,
         'updatedAt': FieldValue.serverTimestamp(),
-      });
+      };
+
+      if (_imageFile != null) {
+        final result = await _cloudinaryService.uploadImage(
+          _imageFile!, 
+          folder: 'user_profile'
+        );
+
+        if (result != null) {
+          updateData['fotoUrl'] = result['url'];
+          updateData['fotoPublicId'] = result['public_id'];
+        }
+      }
+
+      await FirebaseFirestore.instance
+          .collection('users')
+          .doc(firebaseUser.uid)
+          .update(updateData);
 
       if (mounted) {
-        // Mostrar mensaje de éxito
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             content: Row(
@@ -148,7 +190,6 @@ class _UpgradeToProviderScreenState extends State<UpgradeToProviderScreen> {
           ),
         );
 
-        // Regresar con resultado positivo para forzar recarga
         Navigator.pop(context, true);
       }
     } catch (e) {
@@ -172,14 +213,7 @@ class _UpgradeToProviderScreenState extends State<UpgradeToProviderScreen> {
     if (_isDataLoading) {
       return const Scaffold(
         body: Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              CircularProgressIndicator(),
-              SizedBox(height: 20),
-              Text('Cargando tu información...'),
-            ],
-          ),
+          child: CircularProgressIndicator(),
         ),
       );
     }
@@ -197,7 +231,7 @@ class _UpgradeToProviderScreenState extends State<UpgradeToProviderScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              // Encabezado con ícono
+              // Encabezado
               Card(
                 elevation: 3,
                 color: Colors.orange.shade50,
@@ -205,32 +239,65 @@ class _UpgradeToProviderScreenState extends State<UpgradeToProviderScreen> {
                   padding: const EdgeInsets.all(16.0),
                   child: Column(
                     children: const [
-                      Icon(
-                        Icons.business_center,
-                        size: 64,
-                        color: Color(0xFFFF6B35),
-                      ),
+                      Icon(Icons.business_center, size: 50, color: Color(0xFFFF6B35)),
                       SizedBox(height: 10),
                       Text(
                         'Configura tu Perfil Profesional',
                         style: TextStyle(
-                          fontSize: 20,
+                          fontSize: 18,
                           fontWeight: FontWeight.bold,
                           color: Color(0xFF1E3A8A),
                         ),
                         textAlign: TextAlign.center,
                       ),
-                      SizedBox(height: 8),
-                      Text(
-                        'Completa la información para ofrecer tus servicios',
-                        style: TextStyle(
-                          fontSize: 14,
-                          color: Colors.grey,
-                        ),
-                        textAlign: TextAlign.center,
-                      ),
                     ],
                   ),
+                ),
+              ),
+              const SizedBox(height: 20),
+
+              // --- SECCIÓN DE FOTO DE PERFIL ---
+              Center(
+                child: Stack(
+                  children: [
+                    GestureDetector(
+                      onTap: _pickImage,
+                      child: CircleAvatar(
+                        radius: 60,
+                        backgroundColor: Colors.grey.shade200,
+                        backgroundImage: _imageFile != null
+                            ? FileImage(_imageFile!) // Muestra la nueva si la seleccionó
+                            : (_currentPhotoUrl != null && _currentPhotoUrl!.isNotEmpty
+                                ? NetworkImage(_currentPhotoUrl!) // Muestra la vieja si existe
+                                : null) as ImageProvider?,
+                        child: (_imageFile == null && (_currentPhotoUrl == null || _currentPhotoUrl!.isEmpty))
+                            ? const Icon(Icons.person, size: 60, color: Colors.grey)
+                            : null,
+                      ),
+                    ),
+                    Positioned(
+                      bottom: 0,
+                      right: 0,
+                      child: GestureDetector(
+                        onTap: _pickImage,
+                        child: Container(
+                          padding: const EdgeInsets.all(8),
+                          decoration: const BoxDecoration(
+                            color: Color(0xFFFF6B35),
+                            shape: BoxShape.circle,
+                          ),
+                          child: const Icon(Icons.camera_alt, color: Colors.white, size: 20),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 10),
+              const Center(
+                child: Text(
+                  "Foto de Perfil",
+                  style: TextStyle(color: Colors.grey),
                 ),
               ),
               const SizedBox(height: 20),
@@ -242,19 +309,13 @@ class _UpgradeToProviderScreenState extends State<UpgradeToProviderScreen> {
                 decoration: InputDecoration(
                   labelText: 'Teléfono de Contacto',
                   prefixIcon: const Icon(Icons.phone, color: Color(0xFFFF6B35)),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(10),
-                  ),
+                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
                   filled: true,
                   fillColor: Colors.grey.shade50,
                 ),
                 validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'El teléfono es obligatorio';
-                  }
-                  if (value.length < 10) {
-                    return 'Ingresa un teléfono válido de al menos 10 dígitos';
-                  }
+                  if (value == null || value.isEmpty) return 'El teléfono es obligatorio';
+                  if (value.length < 10) return 'Mínimo 10 dígitos';
                   return null;
                 },
               ),
@@ -265,26 +326,16 @@ class _UpgradeToProviderScreenState extends State<UpgradeToProviderScreen> {
                 controller: _descriptionController,
                 maxLines: 4,
                 decoration: InputDecoration(
-                  labelText: 'Describe tus Servicios y Experiencia',
+                  labelText: 'Describe tus Servicios',
                   alignLabelWithHint: true,
-                  prefixIcon: const Icon(
-                    Icons.description,
-                    color: Color(0xFFFF6B35),
-                  ),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(10),
-                  ),
+                  prefixIcon: const Icon(Icons.description, color: Color(0xFFFF6B35)),
+                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
                   filled: true,
                   fillColor: Colors.grey.shade50,
-                  hintText: 'Ej: Tengo 5 años de experiencia en electricidad residencial...',
                 ),
                 validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'La descripción es obligatoria';
-                  }
-                  if (value.length < 20) {
-                    return 'La descripción debe tener al menos 20 caracteres';
-                  }
+                  if (value == null || value.isEmpty) return 'La descripción es obligatoria';
+                  if (value.length < 20) return 'Mínimo 20 caracteres';
                   return null;
                 },
               ),
@@ -304,20 +355,9 @@ class _UpgradeToProviderScreenState extends State<UpgradeToProviderScreen> {
                           SizedBox(width: 8),
                           Text(
                             'Selecciona tus Oficios',
-                            style: TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.bold,
-                            ),
+                            style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                           ),
                         ],
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        'Puedes seleccionar múltiples oficios',
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: Colors.grey.shade600,
-                        ),
                       ),
                       const SizedBox(height: 16),
                       Wrap(
@@ -343,18 +383,6 @@ class _UpgradeToProviderScreenState extends State<UpgradeToProviderScreen> {
                           );
                         }).toList(),
                       ),
-                      if (_selectedOccupations.isNotEmpty)
-                        Padding(
-                          padding: const EdgeInsets.only(top: 12),
-                          child: Text(
-                            '${_selectedOccupations.length} oficio(s) seleccionado(s)',
-                            style: TextStyle(
-                              fontSize: 12,
-                              color: Colors.orange.shade700,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ),
                     ],
                   ),
                 ),
@@ -367,19 +395,13 @@ class _UpgradeToProviderScreenState extends State<UpgradeToProviderScreen> {
                 style: ElevatedButton.styleFrom(
                   backgroundColor: const Color(0xFFFF6B35),
                   padding: const EdgeInsets.symmetric(vertical: 16),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(10),
-                  ),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                   elevation: 5,
                 ),
                 child: _isLoading
                     ? const SizedBox(
-                        width: 24,
-                        height: 24,
-                        child: CircularProgressIndicator(
-                          color: Colors.white,
-                          strokeWidth: 2,
-                        ),
+                        width: 24, height: 24,
+                        child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
                       )
                     : const Row(
                         mainAxisAlignment: MainAxisAlignment.center,
@@ -387,7 +409,7 @@ class _UpgradeToProviderScreenState extends State<UpgradeToProviderScreen> {
                           Icon(Icons.check_circle, color: Colors.white),
                           SizedBox(width: 10),
                           Text(
-                            'GUARDAR Y CONVERTIRME EN PROVEEDOR',
+                            'CONVERTIRME EN PROVEEDOR',
                             style: TextStyle(
                               fontSize: 16,
                               color: Colors.white,
@@ -398,8 +420,6 @@ class _UpgradeToProviderScreenState extends State<UpgradeToProviderScreen> {
                       ),
               ),
               const SizedBox(height: 16),
-
-              // Botón cancelar
               TextButton(
                 onPressed: _isLoading ? null : () => Navigator.pop(context),
                 child: const Text('Cancelar'),

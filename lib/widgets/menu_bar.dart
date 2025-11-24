@@ -3,6 +3,9 @@ import 'package:flutter/material.dart';
 class Menu_Bar extends StatelessWidget implements PreferredSizeWidget {
   final bool isAuthenticated;
   
+  // Variable para recibir la foto
+  final String? photoUrl;
+
   // Callbacks
   final VoidCallback? onMenuPressed;
   final VoidCallback? onSearchPressed;
@@ -21,6 +24,7 @@ class Menu_Bar extends StatelessWidget implements PreferredSizeWidget {
   const Menu_Bar({
     Key? key,
     this.isAuthenticated = false,
+    this.photoUrl,
     this.onMenuPressed,
     this.onSearchPressed,
     this.onNotificationPressed,
@@ -112,11 +116,23 @@ class Menu_Bar extends StatelessWidget implements PreferredSizeWidget {
               ),
           ],
         ),
-        IconButton(
-          icon: Icon(Icons.account_circle_outlined, color: iconColor),
-          onPressed: onProfilePressed,
+
+        Padding(
+          padding: const EdgeInsets.only(right: 12.0, left: 8.0),
+          child: GestureDetector(
+            onTap: onProfilePressed,
+            child: CircleAvatar(
+              radius: 18,
+              backgroundColor: Colors.grey.shade300,
+              backgroundImage: (photoUrl != null && photoUrl!.isNotEmpty)
+                  ? NetworkImage(photoUrl!)
+                  : null,
+              child: (photoUrl == null || photoUrl!.isEmpty)
+                  ? Icon(Icons.account_circle_outlined, color: iconColor, size: 28)
+                  : null,
+            ),
+          ),
         ),
-        const SizedBox(width: 8),
       ];
     } else {
       // Acciones para usuario NO autenticado
