@@ -17,6 +17,7 @@ dependencies:
   firebase_messaging: ^16.0.4
   http: ^1.2.0
   googleapis_auth: ^1.6.0
+  connectivity_plus: ^6.0.0
 
   image_picker: ^1.0.4 
   crypto: ^3.0.3

@@ -31,11 +31,37 @@ class AnuncioModel {
       imagenes: json["imagenes"] != null
           ? List<Map<String, dynamic>>.from(json["imagenes"])
           : [],
-      createdAt: json["createdAt"] != null
-          ? (json["createdAt"] as dynamic).toDate()
-          : null,
+      // CORRECCIÓN: Manejar tanto Timestamp como String
+      createdAt: _parseDateTime(json["createdAt"]),
       categoria: json["categoria"],
     );
+  }
+
+  // MÉTODO HELPER para parsear fechas de múltiples formatos
+  static DateTime? _parseDateTime(dynamic value) {
+    if (value == null) return null;
+    
+    try {
+      // Si es un Timestamp de Firestore
+      if (value.runtimeType.toString().contains('Timestamp')) {
+        return (value as dynamic).toDate();
+      }
+      
+      // Si es un String (ISO 8601)
+      if (value is String) {
+        return DateTime.parse(value);
+      }
+      
+      // Si ya es DateTime
+      if (value is DateTime) {
+        return value;
+      }
+      
+      return null;
+    } catch (e) {
+      print('Error parseando fecha: $e');
+      return null;
+    }
   }
 
   Map<String, dynamic> toMap() {

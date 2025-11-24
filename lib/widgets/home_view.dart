@@ -151,7 +151,14 @@ class HomeView extends StatelessWidget {
               }
             },
           ),
-
+          ListTile(
+            leading: const Icon(Icons.download_outlined),
+            title: const Text('Anuncios Offline'),
+            onTap: () {
+              Navigator.pop(context);
+              Navigator.pushNamed(context, 'offline_anuncios');
+            },
+          ),
           ListTile(
             leading: const Icon(Icons.person),
             title: const Text('Perfil'),

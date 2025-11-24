@@ -9,6 +9,9 @@ import 'package:project_servify/screens/inicio_usuarios_screen.dart';
 import 'package:project_servify/screens/crear_cuenta_screen.dart';
 import 'package:project_servify/screens/recuperar_pass_screen.dart';
 import 'package:project_servify/screens/notifications_screen.dart';
+import 'package:project_servify/services/offline_service.dart';
+import 'package:project_servify/screens/offline_anuncios_offline.dart';
+import 'package:flutter/foundation.dart';
 
 // 1. Handler de Background (Debe estar FUERA de cualquier clase)
 @pragma('vm:entry-point')
@@ -26,6 +29,11 @@ void main() async {
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
+
+  if (kIsWeb) {
+    await OfflineService().initialize();
+  }
+
 
   // 2. Registramos el handler de background
   FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
@@ -76,6 +84,7 @@ class _MainAppState extends State<MainApp> {
         'inicio_usuarios': (_) => const InicioUsuariosScreen(),
         'crear_cuenta': (_) => const CrearCuentaScreen(),
         'recuperar_pass': (_) => const RecuperarPassScreen(),
+        'offline_anuncios': (_) => const OfflineAnunciosScreen(), // 🆕 NUEVA RUTA
       },
       theme: ThemeData.light().copyWith(
         scaffoldBackgroundColor: Colors.grey[100],

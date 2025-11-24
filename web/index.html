@@ -1,38 +1,222 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <!--
-    If you are serving your web app in a path other than the root, change the
-    href value below to reflect the base path you are serving from.
-
-    The path provided below has to start and end with a slash "/" in order for
-    it to work correctly.
-
-    For more details:
-    * https://developer.mozilla.org/en-US/docs/Web/HTML/Element/base
-
-    This is a placeholder for base href that will be replaced by the value of
-    the `--base-href` argument provided to `flutter build`.
-  -->
   <base href="$FLUTTER_BASE_HREF">
-
+  
   <meta charset="UTF-8">
   <meta content="IE=Edge" http-equiv="X-UA-Compatible">
-  <meta name="description" content="A new Flutter project.">
+  <meta name="description" content="Servify - Plataforma de servicios profesionales">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-  <!-- iOS meta tags & icons -->
+  <!-- PWA Meta Tags -->
   <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black">
-  <meta name="apple-mobile-web-app-title" content="project_servify">
+  <meta name="apple-mobile-web-app-title" content="Servify">
   <link rel="apple-touch-icon" href="icons/Icon-192.png">
 
   <!-- Favicon -->
   <link rel="icon" type="image/png" href="favicon.png"/>
 
-  <title>project_servify</title>
+  <title>Servify - Servicios Profesionales</title>
   <link rel="manifest" href="manifest.json">
+
+  <style>
+    /* Splash screen mientras carga */
+    body {
+      margin: 0;
+      padding: 0;
+      background-color: #0F3B81;
+    }
+    .loading-container {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      background-color: #0F3B81;
+      color: white;
+    }
+    .loading-logo {
+      width: 120px;
+      height: 120px;
+      margin-bottom: 20px;
+      animation: pulse 1.5s ease-in-out infinite;
+    }
+    @keyframes pulse {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.7; transform: scale(0.95); }
+    }
+    .loading-text {
+      font-family: Arial, sans-serif;
+      font-size: 20px;
+      font-weight: bold;
+      margin-bottom: 10px;
+    }
+    .loading-subtext {
+      font-family: Arial, sans-serif;
+      font-size: 14px;
+      opacity: 0.8;
+    }
+    .spinner {
+      width: 40px;
+      height: 40px;
+      border: 4px solid rgba(255, 255, 255, 0.3);
+      border-top-color: white;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+      margin-top: 20px;
+    }
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+  </style>
 </head>
 <body>
+  <!-- Splash screen -->
+  <div class="loading-container" id="splash">
+    <div class="loading-logo">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" fill="white">
+        <path d="M50 10 L90 30 L90 70 L50 90 L10 70 L10 30 Z"/>
+        <path d="M50 25 L75 40 L75 60 L50 75 L25 60 L25 40 Z" fill="#0F3B81"/>
+      </svg>
+    </div>
+    <div class="loading-text">Servify</div>
+    <div class="loading-subtext">Cargando aplicación...</div>
+    <div class="spinner"></div>
+  </div>
+
   <script src="flutter_bootstrap.js" async></script>
+
+  <script>
+    // Registrar Service Worker para PWA y modo offline
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        // Registrar nuestro Service Worker personalizado
+        navigator.serviceWorker.register('/sw.js')
+          .then(registration => {
+            console.log('✅ Service Worker registrado:', registration.scope);
+            
+            // Esperar a que esté activo
+            return navigator.serviceWorker.ready;
+          })
+          .then(() => {
+            console.log('✅ Service Worker listo');
+            
+            // Escuchar mensajes del Service Worker
+            navigator.serviceWorker.addEventListener('message', event => {
+              console.log('📨 Mensaje del SW:', event.data);
+              
+              // Puedes manejar eventos específicos aquí
+              if (event.data.type === 'ANUNCIO_CACHED') {
+                console.log('Anuncio cacheado:', event.data.anuncioId);
+              }
+            });
+          })
+          .catch(error => {
+            console.error('❌ Error registrando Service Worker:', error);
+          });
+      });
+    }
+
+    // Detectar cuando la app está offline/online
+    window.addEventListener('online', () => {
+      console.log('🟢 Conexión restaurada');
+      // Podrías mostrar una notificación o actualizar la UI
+    });
+
+    window.addEventListener('offline', () => {
+      console.log('🔴 Sin conexión - Modo offline activo');
+      // Podrías mostrar una notificación
+    });
+
+    // Ocultar splash screen cuando Flutter cargue
+    window.addEventListener('flutter-first-frame', () => {
+      const splash = document.getElementById('splash');
+      if (splash) {
+        splash.style.transition = 'opacity 0.5s';
+        splash.style.opacity = '0';
+        setTimeout(() => splash.remove(), 500);
+      }
+    });
+
+    // Funciones helper para comunicación entre Flutter y Service Worker
+    window.sendMessageToSW = function(message) {
+      if (!navigator.serviceWorker.controller) {
+        console.warn('⚠️ Service Worker no disponible');
+        return Promise.reject('Service Worker no disponible');
+      }
+      
+      navigator.serviceWorker.controller.postMessage(message);
+      return Promise.resolve();
+    };
+
+    window.sendMessageToSWWithResponse = function(message) {
+      return new Promise((resolve, reject) => {
+        if (!navigator.serviceWorker.controller) {
+          reject(new Error('Service Worker no disponible'));
+          return;
+        }
+
+        const messageChannel = new MessageChannel();
+        
+        messageChannel.port1.onmessage = (event) => {
+          resolve(event.data);
+        };
+
+        navigator.serviceWorker.controller.postMessage(
+          message,
+          [messageChannel.port2]
+        );
+
+        // Timeout de 10 segundos
+        setTimeout(() => reject(new Error('Timeout')), 10000);
+      });
+    };
+
+    // localStorage helpers para Flutter
+    window.saveToLocalStorage = function(key, value) {
+      try {
+        localStorage.setItem(key, value);
+        return true;
+      } catch (e) {
+        console.error('Error guardando en localStorage:', e);
+        return false;
+      }
+    };
+
+    window.getFromLocalStorage = function(key) {
+      try {
+        return localStorage.getItem(key);
+      } catch (e) {
+        console.error('Error leyendo localStorage:', e);
+        return null;
+      }
+    };
+
+    // Instalar prompt para "Agregar a pantalla de inicio"
+    let deferredPrompt;
+    window.addEventListener('beforeinstallprompt', (e) => {
+      e.preventDefault();
+      deferredPrompt = e;
+      console.log('💾 PWA puede ser instalada');
+    });
+
+    window.showInstallPrompt = function() {
+      if (deferredPrompt) {
+        deferredPrompt.prompt();
+        deferredPrompt.userChoice.then((choiceResult) => {
+          if (choiceResult.outcome === 'accepted') {
+            console.log('✅ Usuario aceptó instalar PWA');
+          }
+          deferredPrompt = null;
+        });
+      }
+    };
+  </script>
 </body>
 </html>

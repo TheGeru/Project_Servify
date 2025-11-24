@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sin Conexión - Servify</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+      background: linear-gradient(135deg, #0F3B81 0%, #1E5A9C 100%);
+      color: white;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      padding: 20px;
+    }
+
+    .container {
+      text-align: center;
+      max-width: 600px;
+      background: rgba(255, 255, 255, 0.1);
+      backdrop-filter: blur(10px);
+      border-radius: 20px;
+      padding: 40px;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+    }
+
+    .icon {
+      font-size: 80px;
+      margin-bottom: 20px;
+      animation: bounce 2s infinite;
+    }
+
+    @keyframes bounce {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-10px); }
+    }
+
+    h1 {
+      font-size: 32px;
+      margin-bottom: 15px;
+      font-weight: 700;
+    }
+
+    p {
+      font-size: 18px;
+      margin-bottom: 30px;
+      opacity: 0.9;
+      line-height: 1.6;
+    }
+
+    .connection-status {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      padding: 12px 24px;
+      background: rgba(255, 107, 53, 0.2);
+      border-radius: 25px;
+      margin-bottom: 30px;
+      font-size: 16px;
+      font-weight: 600;
+    }
+
+    .status-dot {
+      width: 12px;
+      height: 12px;
+      background: #FF6B35;
+      border-radius: 50%;
+      animation: pulse 1.5s ease-in-out infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.5; }
+    }
+
+    .buttons {
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+      margin-top: 30px;
+    }
+
+    button {
+      padding: 15px 30px;
+      font-size: 16px;
+      font-weight: 600;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      font-family: inherit;
+    }
+
+    .btn-primary {
+      background: white;
+      color: #0F3B81;
+    }
+
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 5px 15px rgba(255, 255, 255, 0.3);
+    }
+
+    .btn-secondary {
+      background: rgba(255, 255, 255, 0.2);
+      color: white;
+      border: 2px solid rgba(255, 255, 255, 0.3);
+    }
+
+    .btn-secondary:hover {
+      background: rgba(255, 255, 255, 0.3);
+    }
+
+    .info-box {
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 10px;
+      padding: 20px;
+      margin-top: 30px;
+      text-align: left;
+    }
+
+    .info-box h3 {
+      font-size: 18px;
+      margin-bottom: 15px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .info-box ul {
+      list-style: none;
+      padding: 0;
+    }
+
+    .info-box li {
+      padding: 8px 0;
+      padding-left: 25px;
+      position: relative;
+      font-size: 14px;
+      opacity: 0.9;
+    }
+
+    .info-box li:before {
+      content: "✓";
+      position: absolute;
+      left: 0;
+      color: #4CAF50;
+      font-weight: bold;
+    }
+
+    .retry-animation {
+      display: inline-block;
+      animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    @media (max-width: 600px) {
+      .container {
+        padding: 30px 20px;
+      }
+
+      h1 {
+        font-size: 24px;
+      }
+
+      p {
+        font-size: 16px;
+      }
+
+      .icon {
+        font-size: 60px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="icon">📡</div>
+    
+    <h1>Sin Conexión a Internet</h1>
+    
+    <p>No pudimos conectar con el servidor. Verifica tu conexión e intenta nuevamente.</p>
+
+    <div class="connection-status">
+      <span class="status-dot"></span>
+      <span>Modo Offline Activo</span>
+    </div>
+
+    <div class="buttons">
+      <button class="btn-primary" onclick="retryConnection()">
+        <span id="retry-icon">🔄</span> Reintentar Conexión
+      </button>
+      
+      <button class="btn-secondary" onclick="goToOfflineAnuncios()">
+        📥 Ver Anuncios Guardados
+      </button>
+    </div>
+
+    <div class="info-box">
+      <h3>💡 ¿Qué puedo hacer sin conexión?</h3>
+      <ul>
+        <li>Ver anuncios que hayas guardado previamente</li>
+        <li>Consultar información de servicios descargados</li>
+        <li>Explorar tu perfil y configuración</li>
+        <li>Los cambios se sincronizarán cuando vuelvas a conectarte</li>
+      </ul>
+    </div>
+  </div>
+
+  <script>
+    // Detectar cuando vuelve la conexión
+    window.addEventListener('online', () => {
+      console.log('🟢 Conexión restaurada');
+      showNotification('¡Conexión restaurada!');
+      setTimeout(() => {
+        window.location.reload();
+      }, 1000);
+    });
+
+    // Detectar pérdida de conexión
+    window.addEventListener('offline', () => {
+      console.log('🔴 Conexión perdida');
+      showNotification('Conexión perdida');
+    });
+
+    function retryConnection() {
+      const retryIcon = document.getElementById('retry-icon');
+      retryIcon.classList.add('retry-animation');
+      
+      // Verificar conexión
+      fetch('/', { method: 'HEAD', cache: 'no-cache' })
+        .then(() => {
+          console.log('✅ Conexión exitosa');
+          showNotification('¡Conectado! Redirigiendo...');
+          setTimeout(() => window.location.href = '/', 500);
+        })
+        .catch(() => {
+          console.log('❌ Sin conexión');
+          showNotification('Aún sin conexión. Intenta de nuevo.');
+          retryIcon.classList.remove('retry-animation');
+        });
+    }
+
+    function goToOfflineAnuncios() {
+      // Intentar navegar a la vista de anuncios offline
+      window.location.href = '/#/offline-anuncios';
+    }
+
+    function showNotification(message) {
+      // Crear notificación simple
+      const notification = document.createElement('div');
+      notification.textContent = message;
+      notification.style.cssText = `
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        background: rgba(0, 0, 0, 0.8);
+        color: white;
+        padding: 15px 25px;
+        border-radius: 10px;
+        font-size: 14px;
+        font-weight: 600;
+        z-index: 9999;
+        animation: slideIn 0.3s ease-out;
+      `;
+      
+      document.body.appendChild(notification);
+      
+      setTimeout(() => {
+        notification.style.animation = 'slideOut 0.3s ease-out';
+        setTimeout(() => notification.remove(), 300);
+      }, 3000);
+    }
+
+    // Verificar estado inicial
+    if (!navigator.onLine) {
+      console.log('🔴 Inicio en modo offline');
+    }
+
+    // Intentar conexión automática cada 30 segundos
+    setInterval(() => {
+      if (!navigator.onLine) {
+        console.log('🔄 Verificando conexión automáticamente...');
+        fetch('/', { method: 'HEAD', cache: 'no-cache' })
+          .then(() => {
+            showNotification('Conexión restaurada. Recargando...');
+            setTimeout(() => window.location.reload(), 1000);
+          })
+          .catch(() => {
+            console.log('⏳ Aún sin conexión');
+          });
+      }
+    }, 30000);
+  </script>
+</body>
+</html>

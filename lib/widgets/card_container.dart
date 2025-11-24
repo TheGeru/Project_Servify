@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:project_servify/models/anuncios_model.dart';
 import 'package:project_servify/models/usuarios_model.dart';
+import 'package:project_servify/widgets/offline_button.dart';
 
 class AnuncioCard extends StatelessWidget {
   final AnuncioModel anuncio;
@@ -134,6 +135,13 @@ class AnuncioCard extends StatelessWidget {
                       overflow: TextOverflow.ellipsis,
                     ),
                     const SizedBox(height: 12),
+                    Padding(
+                      padding: const EdgeInsets.only(top: 12),
+                      child: OfflineButton(
+                        anuncio: anuncio,
+                        compact: false,
+                        ),
+                      ),
 
                     // Información del proveedor
                     if (showProviderInfo)
