@@ -4,10 +4,15 @@ import 'package:image_picker/image_picker.dart';
 import 'package:project_servify/models/usuarios_model.dart';
 import 'package:project_servify/screens/upgrade_to_provider_screen.dart';
 import 'package:project_servify/screens/edit_profile_screen.dart';
-import 'package:project_servify/screens/chat_screen.dart'; // <--- IMPORTA TU PANTALLA DE CHAT
+import 'package:project_servify/screens/chat_screen.dart';
 import 'package:project_servify/widgets/info_row.dart';
 import 'package:project_servify/services/profile_service.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:project_servify/models/anuncios_model.dart';
+import 'package:project_servify/services/anuncios_service.dart';
+import 'package:project_servify/widgets/card_container.dart';
+import 'package:project_servify/screens/service_detail_screen.dart';
+import 'package:project_servify/screens/edit_service_screen.dart';
 
 class PerfilUsuarioScreen extends StatelessWidget {
   final UsuarioModel userModel;
@@ -427,8 +432,8 @@ class PerfilUsuarioScreen extends StatelessWidget {
                   ],
                 ),
               ),
-
-            const SizedBox(height: 30),
+            const SizedBox(height: 20),
+            _buildUserAnuncios(context, userModel, isMe),
           ],
         ),
       ),
@@ -556,5 +561,169 @@ void _showDeleteAccountDialog(BuildContext context) {
         ),
       ],
     ),
+  );
+}
+
+// MÉTODO PARA MOSTRAR ANUNCIOS
+// Método actualizado para recibir 'userModel' y 'isMe'
+Widget _buildUserAnuncios(
+    BuildContext context, UsuarioModel userModel, bool isMe) {
+  if (userModel.tipo != 'provider') {
+    return const SizedBox.shrink();
+  }
+
+  final anunciosService = AnunciosService();
+
+  return Column(
+    crossAxisAlignment: CrossAxisAlignment.start,
+    children: [
+      Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            const Text(
+              'Servicios Publicados',
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                color: Colors.white,
+              ),
+            ),
+            // Un pequeño contador opcional
+            if (isMe)
+              const Icon(Icons.settings, color: Colors.white70, size: 16),
+          ],
+        ),
+      ),
+      StreamBuilder<List<AnuncioModel>>(
+        stream: anunciosService.getAnunciosByProveedor(userModel.uid),
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const Center(child: CircularProgressIndicator());
+          }
+
+          final anuncios = snapshot.data ?? [];
+
+          if (anuncios.isEmpty) {
+            return Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(20),
+              margin: const EdgeInsets.symmetric(horizontal: 20),
+              decoration: BoxDecoration(
+                color: Colors.white.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Text(
+                isMe
+                    ? 'No has publicado servicios aún.'
+                    : 'Este usuario aún no tiene servicios activos.',
+                style: const TextStyle(color: Colors.white70),
+                textAlign: TextAlign.center,
+              ),
+            );
+          }
+
+          return ListView.builder(
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            itemCount: anuncios.length,
+            padding: const EdgeInsets.symmetric(horizontal: 10),
+            itemBuilder: (context, index) {
+              final anuncio = anuncios[index];
+
+              return AnuncioCard(
+                anuncio: anuncio,
+                showProviderInfo: false,
+                onTap: () {
+                  // Navegar al detalle
+                  final serviceData = {
+                    'titulo': anuncio.titulo,
+                    'descripcion': anuncio.descripcion,
+                    'precio': anuncio.precio,
+                    'categoria': anuncio.categoria ?? 'Servicios',
+                    'descripcion_completa': anuncio.descripcion,
+                    'proveedor_id': anuncio.proveedorId,
+                    'imagenes': anuncio.imagenes,
+                  };
+
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) =>
+                          ServiceDetailScreen(serviceData: serviceData),
+                    ),
+                  );
+                },
+
+                // === LÓGICA DE EDICIÓN (Solo si es mi perfil) ===
+                onEdit: isMe
+                    ? () async {
+                        final result = await Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) =>
+                                EditServiceScreen(anuncio: anuncio),
+                          ),
+                        );
+                        // El StreamBuilder se actualizará solo, pero puedes mostrar un mensaje
+                        if (result == true && context.mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                                content: Text('Anuncio actualizado')),
+                          );
+                        }
+                      }
+                    : null, // Si no es mi perfil, pasamos null y los botones se ocultan
+
+                // === LÓGICA DE ELIMINACIÓN (Solo si es mi perfil) ===
+                onDelete: isMe
+                    ? () async {
+                        final confirm = await showDialog<bool>(
+                          context: context,
+                          builder: (ctx) => AlertDialog(
+                            title: const Text('Eliminar Servicio'),
+                            content: const Text(
+                              '¿Estás seguro de que quieres eliminar este servicio permanentemente?',
+                            ),
+                            actions: [
+                              TextButton(
+                                onPressed: () => Navigator.pop(ctx, false),
+                                child: const Text('Cancelar'),
+                              ),
+                              ElevatedButton(
+                                onPressed: () => Navigator.pop(ctx, true),
+                                style: ElevatedButton.styleFrom(
+                                    backgroundColor: Colors.red),
+                                child: const Text('Eliminar'),
+                              ),
+                            ],
+                          ),
+                        );
+
+                        if (confirm == true && context.mounted) {
+                          try {
+                            await anunciosService.deleteAnuncio(
+                                anuncio.id, anuncio.proveedorId);
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                  content: Text('Servicio eliminado'),
+                                  backgroundColor: Colors.red),
+                            );
+                          } catch (e) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(content: Text('Error: $e')),
+                            );
+                          }
+                        }
+                      }
+                    : null,
+              );
+            },
+          );
+        },
+      ),
+      const SizedBox(height: 40),
+    ],
   );
 }
