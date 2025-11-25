@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart'; // Para kIsWeb
 import 'package:firebase_core/firebase_core.dart';
-import 'package:firebase_messaging/firebase_messaging.dart'; // Importante
+import 'package:firebase_messaging/firebase_messaging.dart';
+import 'package:hive_flutter/hive_flutter.dart'; // <--- NUEVO
 import 'firebase_options.dart';
 
 // Screens
@@ -9,39 +11,38 @@ import 'package:project_servify/screens/inicio_usuarios_screen.dart';
 import 'package:project_servify/screens/crear_cuenta_screen.dart';
 import 'package:project_servify/screens/recuperar_pass_screen.dart';
 import 'package:project_servify/screens/notifications_screen.dart';
-import 'package:project_servify/services/offline_service.dart';
-import 'package:project_servify/screens/offline_anuncios_offline.dart';
-import 'package:flutter/foundation.dart';
+import 'package:project_servify/screens/offline_anuncios_screen.dart'; // <--- Asegúrate del nombre
+import 'package:project_servify/services/offline_service.dart'; // <--- NUEVO
 
-// 1. Handler de Background (Debe estar FUERA de cualquier clase)
+// Handler de Background
 @pragma('vm:entry-point')
 Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
-  // Inicializamos Firebase para poder usarlo en segundo plano
-  await Firebase.initializeApp(
-    options: DefaultFirebaseOptions.currentPlatform,
-  );
+  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
   print("Notificación en segundo plano recibida: ${message.messageId}");
 }
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  
-  await Firebase.initializeApp(
-    options: DefaultFirebaseOptions.currentPlatform,
-  );
 
-  if (kIsWeb) {
-    await OfflineService().initialize();
-  }
+  // 1. Inicializar Firebase
+  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
 
+  // 2. Inicializar Hive (Base de datos local)
+  await Hive.initFlutter();
 
-  // 2. Registramos el handler de background
+  // 3. Abrir la caja (box) donde se guardarán los anuncios
+  // Esto crea el archivo físico en el celular/navegador
+  await Hive.openBox('anuncios_offline');
+
+  // 4. Inicializar servicio de conectividad (Singleton)
+  await OfflineService().initialize();
+
+  // 5. Registrar notificaciones en background
   FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
 
   runApp(const MainApp());
 }
 
-// 3. Convertimos MainApp a StatefulWidget para usar initState
 class MainApp extends StatefulWidget {
   const MainApp({super.key});
 
@@ -50,20 +51,19 @@ class MainApp extends StatefulWidget {
 }
 
 class _MainAppState extends State<MainApp> {
-
   @override
   void initState() {
     super.initState();
-    
-    // 4. Escuchar notificaciones en primer plano (App abierta)
+
+    // Escuchar notificaciones en primer plano
     FirebaseMessaging.onMessage.listen((RemoteMessage message) {
       print('Notificación en primer plano: ${message.notification?.title}');
-      
-      if (message.notification != null) {
-        // Mostramos un aviso visual (SnackBar)
+      if (message.notification != null && mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('${message.notification!.title}: ${message.notification!.body}'),
+            content: Text(
+              '${message.notification!.title}: ${message.notification!.body}',
+            ),
             backgroundColor: Colors.green,
             duration: const Duration(seconds: 5),
           ),
@@ -84,7 +84,7 @@ class _MainAppState extends State<MainApp> {
         'inicio_usuarios': (_) => const InicioUsuariosScreen(),
         'crear_cuenta': (_) => const CrearCuentaScreen(),
         'recuperar_pass': (_) => const RecuperarPassScreen(),
-        'offline_anuncios': (_) => const OfflineAnunciosScreen(), // 🆕 NUEVA RUTA
+        'offline_anuncios': (_) => const OfflineAnunciosScreen(), // Nueva Ruta
       },
       theme: ThemeData.light().copyWith(
         scaffoldBackgroundColor: Colors.grey[100],

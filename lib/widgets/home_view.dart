@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:project_servify/screens/home_screen.dart';
-import 'package:project_servify/widgets/menu_bar.dart'; 
+import 'package:project_servify/screens/home_screen.dart'; // Para ServiceData
+import 'package:project_servify/widgets/menu_bar.dart';
 import 'package:project_servify/models/usuarios_model.dart';
 import 'package:project_servify/screens/perfil_usuario_screen.dart';
 import 'package:project_servify/screens/chat_list_screen.dart';
 
-// CORRECCIÓN: Función helper global para obtener iniciales de forma segura
+// Función helper para obtener iniciales de forma segura
 String _getInitials(User? user, UsuarioModel? userModel) {
   if (userModel != null && userModel.nombre.isNotEmpty) {
     return userModel.nombre[0].toUpperCase();
@@ -28,7 +28,7 @@ class HomeView extends StatelessWidget {
   final List<Widget> widgetOptions;
 
   final int notificationCount;
-  
+
   final Function(int) onItemTapped;
   final Function(BuildContext, ServiceData) navigateToServiceDetail;
   final Function(BuildContext) navigateToSearch;
@@ -57,38 +57,26 @@ class HomeView extends StatelessWidget {
         children: <Widget>[
           UserAccountsDrawerHeader(
             accountName: Text(
-              userModel != null 
-                  ? '${userModel!.nombre} ${userModel!.apellidos}' 
-                  : (user != null ? user!.displayName ?? "Usuario Sin Nombre" : "Invitado"),
+              userModel != null
+                  ? '${userModel!.nombre} ${userModel!.apellidos}'
+                  : (user != null
+                      ? user!.displayName ?? "Usuario Sin Nombre"
+                      : "Invitado"),
               style: const TextStyle(fontWeight: FontWeight.bold),
             ),
-            accountEmail: user != null 
+            accountEmail: user != null
                 ? Text(user!.email ?? "Correo no disponible")
-                : const Text("Inicia sesión o regístrate"), 
-            
-            // === AQUÍ ESTÁ EL CAMBIO IMPORTANTE ===
+                : const Text("Inicia sesión o regístrate"),
+
+            // Lógica para mostrar foto o iniciales
             currentAccountPicture: CircleAvatar(
               backgroundColor: Colors.white,
-              // 1. PRIMERO: Revisamos si hay foto en tu Base de Datos (Cloudinary)
-              child: (userModel?.fotoUrl != null && userModel!.fotoUrl!.isNotEmpty)
-                  ? ClipOval(
-                      child: Image.network(
-                        userModel!.fotoUrl!,
-                        width: 90, // Forzamos tamaño para llenar el círculo
-                        height: 90,
-                        fit: BoxFit.cover,
-                        errorBuilder: (_, __, ___) => const Icon(
-                          Icons.person,
-                          size: 40,
-                          color: Colors.grey,
-                        ),
-                      ),
-                    )
-                  // 2. SEGUNDO: Si no, revisamos si hay foto de Google/Firebase
-                  : (user?.photoURL != null)
+              // 1. Revisamos si hay foto en tu Base de Datos (Cloudinary)
+              child:
+                  (userModel?.fotoUrl != null && userModel!.fotoUrl!.isNotEmpty)
                       ? ClipOval(
                           child: Image.network(
-                            user!.photoURL!,
+                            userModel!.fotoUrl!,
                             width: 90,
                             height: 90,
                             fit: BoxFit.cover,
@@ -99,23 +87,36 @@ class HomeView extends StatelessWidget {
                             ),
                           ),
                         )
-                      // 3. TERCERO: Si no hay ninguna, ponemos iniciales
-                      : Text(
-                          _getInitials(user, userModel),
-                          style: const TextStyle(
-                            fontSize: 40.0,
-                            color: Color(0xFF1E3A8A),
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
+                      // 2. Si no, revisamos si hay foto de Google/Firebase
+                      : (user?.photoURL != null)
+                          ? ClipOval(
+                              child: Image.network(
+                                user!.photoURL!,
+                                width: 90,
+                                height: 90,
+                                fit: BoxFit.cover,
+                                errorBuilder: (_, __, ___) => const Icon(
+                                  Icons.person,
+                                  size: 40,
+                                  color: Colors.grey,
+                                ),
+                              ),
+                            )
+                          // 3. Si no hay ninguna, ponemos iniciales
+                          : Text(
+                              _getInitials(user, userModel),
+                              style: const TextStyle(
+                                fontSize: 40.0,
+                                color: Color(0xFF1E3A8A),
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
             ),
-            // ======================================
-            
             decoration: const BoxDecoration(
               color: Color.fromARGB(255, 31, 122, 158),
             ),
           ),
-          
+
           ListTile(
             leading: const Icon(Icons.home_repair_service),
             title: const Text('Servicios'),
@@ -124,7 +125,7 @@ class HomeView extends StatelessWidget {
               onItemTapped(0);
             },
           ),
-           ListTile(
+          ListTile(
             leading: const Icon(Icons.history),
             title: const Text('Historial'),
             onTap: () {
@@ -133,7 +134,7 @@ class HomeView extends StatelessWidget {
             },
           ),
 
-          // === NUEVA OPCIÓN DE CHAT ===
+          // === CHAT ===
           ListTile(
             leading: const Icon(Icons.chat_bubble_outline),
             title: const Text('Mis Mensajes'),
@@ -151,20 +152,24 @@ class HomeView extends StatelessWidget {
               }
             },
           ),
+
+          // === ANUNCIOS OFFLINE (ACTUALIZADO PARA HIVE) ===
           ListTile(
             leading: const Icon(Icons.download_outlined),
             title: const Text('Anuncios Offline'),
             onTap: () {
-              Navigator.pop(context);
+              Navigator.pop(context); // Cerrar drawer
+              // Navegar a la ruta definida en main.dart
               Navigator.pushNamed(context, 'offline_anuncios');
             },
           ),
+
           ListTile(
             leading: const Icon(Icons.person),
             title: const Text('Perfil'),
             onTap: () {
               Navigator.pop(context);
-              
+
               if (user != null && userModel != null) {
                 Navigator.push(
                   context,
@@ -186,19 +191,19 @@ class HomeView extends StatelessWidget {
               }
             },
           ),
-          
+
           const Divider(),
-          
-          if (user != null) 
+
+          if (user != null)
             ListTile(
               leading: const Icon(Icons.logout),
               title: const Text('Cerrar Sesión'),
               onTap: () async {
                 Navigator.pop(context);
-                await FirebaseAuth.instance.signOut(); 
-                
+                await FirebaseAuth.instance.signOut();
+
                 onItemTapped(0);
-                
+
                 if (context.mounted) {
                   ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(content: Text('Sesión Cerrada')),
@@ -206,7 +211,7 @@ class HomeView extends StatelessWidget {
                 }
               },
             )
-          else 
+          else
             ListTile(
               leading: const Icon(Icons.login),
               title: const Text('Iniciar Sesión / Registrarse'),
@@ -223,7 +228,7 @@ class HomeView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final safeIndex = selectedIndex.clamp(0, widgetOptions.length - 1);
-    
+
     return WillPopScope(
       onWillPop: () async {
         if (safeIndex != 0) {
