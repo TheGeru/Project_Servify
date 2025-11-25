@@ -11,10 +11,9 @@ import 'package:project_servify/screens/inicio_usuarios_screen.dart';
 import 'package:project_servify/screens/crear_cuenta_screen.dart';
 import 'package:project_servify/screens/recuperar_pass_screen.dart';
 import 'package:project_servify/screens/notifications_screen.dart';
-import 'package:project_servify/screens/offline_anuncios_screen.dart'; // <--- Asegúrate del nombre
-import 'package:project_servify/services/offline_service.dart'; // <--- NUEVO
+import 'package:project_servify/screens/offline_anuncios_screen.dart';
+import 'package:project_servify/services/offline_service.dart';
 
-// Handler de Background
 @pragma('vm:entry-point')
 Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);

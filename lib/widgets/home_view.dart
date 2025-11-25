@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:project_servify/screens/home_screen.dart'; // Para ServiceData
+import 'package:project_servify/screens/home_screen.dart';
 import 'package:project_servify/widgets/menu_bar.dart';
 import 'package:project_servify/models/usuarios_model.dart';
 import 'package:project_servify/screens/perfil_usuario_screen.dart';
@@ -125,6 +125,7 @@ class HomeView extends StatelessWidget {
               onItemTapped(0);
             },
           ),
+          if (user != null)
           ListTile(
             leading: const Icon(Icons.history),
             title: const Text('Historial'),
@@ -135,6 +136,7 @@ class HomeView extends StatelessWidget {
           ),
 
           // === CHAT ===
+          if (user != null)
           ListTile(
             leading: const Icon(Icons.chat_bubble_outline),
             title: const Text('Mis Mensajes'),
@@ -154,6 +156,7 @@ class HomeView extends StatelessWidget {
           ),
 
           // === ANUNCIOS OFFLINE (ACTUALIZADO PARA HIVE) ===
+          if (user != null)
           ListTile(
             leading: const Icon(Icons.download_outlined),
             title: const Text('Anuncios Offline'),

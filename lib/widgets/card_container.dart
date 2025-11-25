@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:project_servify/models/anuncios_model.dart';
 import 'package:project_servify/models/usuarios_model.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:project_servify/widgets/offline_button.dart';
 
 class AnuncioCard extends StatelessWidget {
@@ -22,6 +23,8 @@ class AnuncioCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+
+    final user = FirebaseAuth.instance.currentUser;
     return Card(
       elevation: 6,
       shadowColor: Colors.black54,
@@ -134,16 +137,19 @@ class AnuncioCard extends StatelessWidget {
                       maxLines: 3,
                       overflow: TextOverflow.ellipsis,
                     ),
-                    const SizedBox(height: 12),
-                    Padding(
-                      padding: const EdgeInsets.only(top: 12),
-                      child: OfflineButton(
-                        anuncio: anuncio,
-                        compact: false,
+
+                    // 3. CONDICIÓN PARA OCULTAR EL BOTÓN OFFLINE A INVITADOS
+                    if (user != null) 
+                      Padding(
+                        padding: const EdgeInsets.only(top: 12),
+                        child: OfflineButton(
+                          anuncio: anuncio,
+                          compact: false,
                         ),
                       ),
+                    const SizedBox(height: 12),
 
-                    // Información del proveedor
+                   // Información del proveedor
                     if (showProviderInfo)
                       FutureBuilder<DocumentSnapshot>(
                         future: FirebaseFirestore.instance
