@@ -4,6 +4,7 @@ import 'package:project_servify/models/anuncios_model.dart';
 import 'package:project_servify/models/usuarios_model.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:project_servify/widgets/offline_button.dart';
+import 'package:project_servify/screens/perfil_usuario_screen.dart';
 
 class AnuncioCard extends StatelessWidget {
   final AnuncioModel anuncio;
@@ -169,40 +170,67 @@ class AnuncioCard extends StatelessWidget {
 
                           final proveedor = UsuarioModel.fromMap(proveedorData);
 
-                          return Row(
-                            children: [
-                              CircleAvatar(
-                                radius: 16,
-                                backgroundColor: Colors.orange.shade100,
-                                backgroundImage:
-                                    (proveedor.fotoUrl != null &&
-                                        proveedor.fotoUrl!.isNotEmpty)
-                                    ? NetworkImage(proveedor.fotoUrl!)
-                                    : null,
-                                child:
-                                    (proveedor.fotoUrl == null ||
-                                        proveedor.fotoUrl!.isEmpty)
-                                    ? Icon(
-                                        Icons.person,
-                                        size: 18,
-                                        color: Colors.orange.shade800,
-                                      )
-                                    : null,
-                              ),
-                              const SizedBox(width: 8),
-                              Expanded(
-                                child: Text(
-                                  'Por: ${proveedor.nombre} ${proveedor.apellidos}',
-                                  style: const TextStyle(
-                                    fontSize: 14,
-                                    fontStyle: FontStyle.italic,
-                                    color: Colors.grey,
+                          // --- AQUÍ EMPIEZA EL CAMBIO ---
+                          return Padding(
+                            padding: const EdgeInsets.only(top: 8.0),
+                            child: InkWell(
+                              onTap: () {
+                                // Navegar al perfil del proveedor
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (_) => PerfilUsuarioScreen(
+                                      userModel: proveedor,
+                                    ),
                                   ),
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                ),
+                                );
+                              },
+                              child: Row(
+                                children: [
+                                  CircleAvatar(
+                                    radius: 16,
+                                    backgroundColor: Colors.orange.shade100,
+                                    backgroundImage: (proveedor.fotoUrl != null &&
+                                            proveedor.fotoUrl!.isNotEmpty)
+                                        ? NetworkImage(proveedor.fotoUrl!)
+                                        : null,
+                                    child: (proveedor.fotoUrl == null ||
+                                            proveedor.fotoUrl!.isEmpty)
+                                        ? Icon(
+                                            Icons.person,
+                                            size: 18,
+                                            color: Colors.orange.shade800,
+                                          )
+                                        : null,
+                                  ),
+                                  const SizedBox(width: 8),
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          'Por: ${proveedor.nombre} ${proveedor.apellidos}',
+                                          style: const TextStyle(
+                                            fontSize: 14,
+                                            fontWeight: FontWeight.bold,
+                                            color: Colors.black87,
+                                          ),
+                                          maxLines: 1,
+                                          overflow: TextOverflow.ellipsis,
+                                        ),
+                                        const Text(
+                                          'Ver perfil',
+                                          style: TextStyle(
+                                            fontSize: 12,
+                                            color: Colors.blue,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ],
                               ),
-                            ],
+                            ),
                           );
                         },
                       ),

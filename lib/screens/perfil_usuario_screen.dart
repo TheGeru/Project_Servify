@@ -4,6 +4,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:project_servify/models/usuarios_model.dart';
 import 'package:project_servify/screens/upgrade_to_provider_screen.dart';
 import 'package:project_servify/screens/edit_profile_screen.dart';
+import 'package:project_servify/screens/chat_screen.dart'; // <--- IMPORTA TU PANTALLA DE CHAT
 import 'package:project_servify/widgets/info_row.dart';
 import 'package:project_servify/services/profile_service.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -15,6 +16,13 @@ class PerfilUsuarioScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // 1. OBTENER EL USUARIO LOGUEADO
+    final currentUser = FirebaseAuth.instance.currentUser;
+
+    // 2. DEFINIR SI ES MI PERFIL
+    // Es mi perfil si estoy logueado Y el ID del perfil coincide con el mío
+    final bool isMe = currentUser != null && currentUser.uid == userModel.uid;
+
     final bool isProvider = userModel.tipo == 'provider';
     final bool isGuest = userModel.uid.isEmpty;
 
@@ -25,7 +33,8 @@ class PerfilUsuarioScreen extends StatelessWidget {
         elevation: 0,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back_ios, color: Colors.white),
-          onPressed: () => Navigator.pushReplacementNamed(context, 'home'),
+          onPressed: () => Navigator.pop(
+              context), // Mejor pop que pushReplacement para volver
         ),
         title: Text(
           isProvider ? 'Perfil de Proveedor' : 'Perfil de Usuario',
@@ -43,16 +52,13 @@ class PerfilUsuarioScreen extends StatelessWidget {
                 children: [
                   CircleAvatar(
                     radius: 100,
-                    backgroundColor: isProvider
-                        ? Colors.orange[100]
-                        : Colors.purple[100],
-                    backgroundImage:
-                        (userModel.fotoUrl != null &&
+                    backgroundColor:
+                        isProvider ? Colors.orange[100] : Colors.purple[100],
+                    backgroundImage: (userModel.fotoUrl != null &&
                             userModel.fotoUrl!.isNotEmpty)
                         ? NetworkImage(userModel.fotoUrl!)
                         : null,
-                    child:
-                        (userModel.fotoUrl == null ||
+                    child: (userModel.fotoUrl == null ||
                             userModel.fotoUrl!.isEmpty)
                         ? Icon(
                             isProvider ? Icons.work : Icons.person,
@@ -62,7 +68,9 @@ class PerfilUsuarioScreen extends StatelessWidget {
                         : null,
                   ),
                   const SizedBox(height: 10),
-                  if (!isGuest)
+
+                  // SOLO MOSTRAR "CAMBIAR FOTO" SI ES MI PERFIL
+                  if (isMe)
                     TextButton(
                       onPressed: () async {
                         await _cambiarFotoPerfil(context, userModel);
@@ -72,6 +80,8 @@ class PerfilUsuarioScreen extends StatelessWidget {
                         style: TextStyle(color: Colors.white),
                       ),
                     ),
+
+                  // ... (El container de PROVEEDOR/USUARIO sigue igual) ...
                   Container(
                     margin: const EdgeInsets.only(top: 10),
                     padding: const EdgeInsets.symmetric(
@@ -96,6 +106,8 @@ class PerfilUsuarioScreen extends StatelessWidget {
                 ],
               ),
             ),
+
+            // ... (Secciones de Descripción e Información General siguen igual) ...
             const SizedBox(height: 20),
 
             // === SECCIÓN: DESCRIPCIÓN (SOLO PROVEEDORES) ===
@@ -188,6 +200,7 @@ class PerfilUsuarioScreen extends StatelessWidget {
                     const Divider(),
                     const SizedBox(height: 10),
 
+                    // Información visible para todos (menos invitados)
                     if (!isGuest) ...[
                       InfoRow(
                         title: "Nombre Completo",
@@ -249,15 +262,18 @@ class PerfilUsuarioScreen extends StatelessWidget {
                 ),
               ),
             ),
-            const SizedBox(height: 20),
 
-            // === SECCIÓN: BOTONES DE ACCIÓN ===
-            if (!isGuest)
+            const SizedBox(height: 30),
+
+            // === SECCIÓN: BOTONES DE ACCIÓN (AQUÍ ESTÁ LA LÓGICA NUEVA) ===
+
+            // CASO 1: ES MI PERFIL (Muestro Editar, Eliminar, Upgrade)
+            if (isMe)
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 20),
                 child: Row(
                   children: [
-                    // Botón EDITAR (ACTUALIZADO)
+                    // Botón EDITAR
                     Expanded(
                       child: ElevatedButton.icon(
                         style: ElevatedButton.styleFrom(
@@ -266,7 +282,6 @@ class PerfilUsuarioScreen extends StatelessWidget {
                           padding: const EdgeInsets.symmetric(vertical: 12),
                         ),
                         onPressed: () async {
-                          // Navegamos a la pantalla de edición
                           final result = await Navigator.push(
                             context,
                             MaterialPageRoute(
@@ -275,16 +290,13 @@ class PerfilUsuarioScreen extends StatelessWidget {
                             ),
                           );
 
-                          // Si se editó con éxito, recargamos la vista home
                           if (result == true && context.mounted) {
                             Navigator.pushReplacementNamed(context, 'home');
                           }
                         },
                         icon: const Icon(Icons.edit, size: 18),
-                        label: const Text(
-                          'EDITAR',
-                          style: TextStyle(fontSize: 12),
-                        ),
+                        label: const Text('EDITAR',
+                            style: TextStyle(fontSize: 12)),
                       ),
                     ),
                     const SizedBox(width: 8),
@@ -301,10 +313,8 @@ class PerfilUsuarioScreen extends StatelessWidget {
                           _showDeleteAccountDialog(context);
                         },
                         icon: const Icon(Icons.delete_forever, size: 18),
-                        label: const Text(
-                          'ELIMINAR',
-                          style: TextStyle(fontSize: 12),
-                        ),
+                        label: const Text('ELIMINAR',
+                            style: TextStyle(fontSize: 12)),
                       ),
                     ),
 
@@ -331,10 +341,8 @@ class PerfilUsuarioScreen extends StatelessWidget {
                             }
                           },
                           icon: const Icon(Icons.upgrade, size: 18),
-                          label: const Text(
-                            'SER PROVEEDOR',
-                            style: TextStyle(fontSize: 11),
-                          ),
+                          label: const Text('PROVEEDOR',
+                              style: TextStyle(fontSize: 11)),
                         ),
                       ),
                     ],
@@ -342,9 +350,48 @@ class PerfilUsuarioScreen extends StatelessWidget {
                 ),
               ),
 
-            const SizedBox(height: 30),
+            // CASO 2: NO ES MI PERFIL, NO SOY INVITADO (Muestro Contactar)
+            if (!isMe && !isGuest)
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 20),
+                child: SizedBox(
+                  width: double.infinity, // Ocupa todo el ancho
+                  child: ElevatedButton.icon(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors
+                          .green, // Color distintivo para acción principal
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(vertical: 15),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                    ),
+                    onPressed: () {
+                      // NAVEGAR AL CHAT
+                      // Asegúrate de tener ChatScreen importado o definido
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => ChatScreen(
+                            targetUser:
+                                userModel, // Pasamos el usuario del perfil
+                          ),
+                        ),
+                      );
+                    },
+                    icon: const Icon(Icons.send, size: 22),
+                    label: const Text(
+                      'ENVIAR MENSAJE',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
 
-            // Botones Login/Registro para invitados...
+            // CASO 3: ES INVITADO (Muestro Login)
             if (isGuest)
               Padding(
                 padding: const EdgeInsets.all(20),
@@ -380,74 +427,92 @@ class PerfilUsuarioScreen extends StatelessWidget {
                   ],
                 ),
               ),
+
+            const SizedBox(height: 30),
           ],
         ),
       ),
     );
   }
+}
 
-  Future<void> _cambiarFotoPerfil(
-    BuildContext context,
-    UsuarioModel user,
-  ) async {
-    final ImagePicker picker = ImagePicker();
-    final XFile? image = await picker.pickImage(source: ImageSource.gallery);
+Future<void> _cambiarFotoPerfil(
+  BuildContext context,
+  UsuarioModel user,
+) async {
+  final ImagePicker picker = ImagePicker();
+  final XFile? image = await picker.pickImage(source: ImageSource.gallery);
 
-    if (image == null) return;
+  if (image == null) return;
+  ScaffoldMessenger.of(context).showSnackBar(
+    const SnackBar(content: Text('Subiendo imagen... por favor espera')),
+  );
+  try {
+    final profileService = ProfileService();
+
+    await profileService.updateProfilePhoto(user.uid, image);
+
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Subiendo imagen... por favor espera')),
+      const SnackBar(content: Text('Foto actualizada correctamente')),
     );
-    try {
-      final profileService = ProfileService();
 
-      await profileService.updateProfilePhoto(user.uid, image);
-
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Foto actualizada correctamente')),
-      );
-
-      Navigator.pushReplacementNamed(context, 'home');
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Error al actualizar foto: $e'),
-          backgroundColor: Colors.red,
-        ),
-      );
-    }
+    Navigator.pushReplacementNamed(context, 'home');
+  } catch (e) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('Error al actualizar foto: $e'),
+        backgroundColor: Colors.red,
+      ),
+    );
   }
+}
 
-  void _showDeleteAccountDialog(BuildContext context) {
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (ctx) => AlertDialog(
-        title: const Text('⚠️ Eliminar Cuenta'),
-        content: const Text(
-          '¿Estás seguro de que deseas eliminar tu cuenta?\n\n'
-          'Esta acción es IRREVERSIBLE.',
+void _showDeleteAccountDialog(BuildContext context) {
+  showDialog(
+    context: context,
+    barrierDismissible: false,
+    builder: (ctx) => AlertDialog(
+      title: const Text('⚠️ Eliminar Cuenta'),
+      content: const Text(
+        '¿Estás seguro de que deseas eliminar tu cuenta?\n\n'
+        'Esta acción es IRREVERSIBLE.',
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(ctx),
+          child: const Text('CANCELAR'),
         ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx),
-            child: const Text('CANCELAR'),
-          ),
-          ElevatedButton(
-            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
-            onPressed: () async {
-              Navigator.pop(ctx);
-              showDialog(
-                context: context,
-                barrierDismissible: false,
-                builder: (c) =>
-                    const Center(child: CircularProgressIndicator()),
-              );
+        ElevatedButton(
+          style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+          onPressed: () async {
+            Navigator.pop(ctx);
+            showDialog(
+              context: context,
+              barrierDismissible: false,
+              builder: (c) => const Center(child: CircularProgressIndicator()),
+            );
 
-              try {
-                final profileService = ProfileService();
-                await profileService.deleteAccount();
-                if (context.mounted) {
-                  Navigator.pop(context);
+            try {
+              final profileService = ProfileService();
+              await profileService.deleteAccount();
+              if (context.mounted) {
+                Navigator.pop(context);
+                Navigator.pushNamedAndRemoveUntil(
+                  context,
+                  'home',
+                  (route) => false,
+                );
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('Cuenta eliminada correctamente.'),
+                  ),
+                );
+              }
+            } on FirebaseAuthException catch (e) {
+              if (context.mounted) {
+                Navigator.pop(context);
+                if (e.code == 'requires-recent-login') {
+                  await FirebaseAuth.instance.signOut();
                   Navigator.pushNamedAndRemoveUntil(
                     context,
                     'home',
@@ -455,58 +520,41 @@ class PerfilUsuarioScreen extends StatelessWidget {
                   );
                   ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(
-                      content: Text('Cuenta eliminada correctamente.'),
+                      content: Text(
+                        'Por seguridad, la sesión ha expirado. Entra a tu perfil nuevamente para eliminar.',
+                      ),
+                      duration: Duration(seconds: 5),
+                      backgroundColor: Colors.orange,
                     ),
                   );
-                }
-              } on FirebaseAuthException catch (e) {
-                if (context.mounted) {
-                  Navigator.pop(context);
-                  if (e.code == 'requires-recent-login') {
-                    await FirebaseAuth.instance.signOut();
-                    Navigator.pushNamedAndRemoveUntil(
-                      context,
-                      'home',
-                      (route) => false,
-                    );
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text(
-                          'Por seguridad, la sesión ha expirado. Entra a tu perfil nuevamente para eliminar.',
-                        ),
-                        duration: Duration(seconds: 5),
-                        backgroundColor: Colors.orange,
-                      ),
-                    );
-                  } else {
-                    // Otro error
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text('Error: ${e.message}'),
-                        backgroundColor: Colors.red,
-                      ),
-                    );
-                  }
-                }
-              } catch (e) {
-                if (context.mounted) {
-                  Navigator.pop(context);
+                } else {
+                  // Otro error
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
-                      content: Text('Error: $e'),
+                      content: Text('Error: ${e.message}'),
                       backgroundColor: Colors.red,
                     ),
                   );
                 }
               }
-            },
-            child: const Text(
-              'ELIMINAR',
-              style: TextStyle(color: Colors.white),
-            ),
+            } catch (e) {
+              if (context.mounted) {
+                Navigator.pop(context);
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text('Error: $e'),
+                    backgroundColor: Colors.red,
+                  ),
+                );
+              }
+            }
+          },
+          child: const Text(
+            'ELIMINAR',
+            style: TextStyle(color: Colors.white),
           ),
-        ],
-      ),
-    );
-  }
+        ),
+      ],
+    ),
+  );
 }

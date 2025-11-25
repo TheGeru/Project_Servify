@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:project_servify/models/usuarios_model.dart'; // <--- IMPORTAR
 import 'package:project_servify/screens/chat_screen.dart';
 
 class ChatListScreen extends StatelessWidget {
@@ -17,11 +18,10 @@ class ChatListScreen extends StatelessWidget {
         foregroundColor: Colors.white,
       ),
       body: StreamBuilder<QuerySnapshot>(
-        // Buscamos salas donde el usuario actual esté en la lista de participantes
         stream: FirebaseFirestore.instance
             .collection('chat_rooms')
             .where('users', arrayContains: currentUserId)
-            .orderBy('lastMessageTime', descending: true) // Requiere índice probablemente
+            .orderBy('lastMessageTime', descending: true)
             .snapshots(),
         builder: (context, snapshot) {
           if (snapshot.hasError) {
@@ -33,7 +33,14 @@ class ChatListScreen extends StatelessWidget {
 
           if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
             return const Center(
-              child: Text("No tienes conversaciones activas"),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(Icons.chat_bubble_outline, size: 80, color: Colors.grey),
+                  SizedBox(height: 10),
+                  Text("No tienes conversaciones activas"),
+                ],
+              ),
             );
           }
 
@@ -44,38 +51,52 @@ class ChatListScreen extends StatelessWidget {
               final data = doc.data() as Map<String, dynamic>;
               final users = List<String>.from(data['users']);
               
-              // Identificar al OTRO usuario (no yo)
               final otherUserId = users.firstWhere((id) => id != currentUserId);
               final lastMessage = data['lastMessage'] ?? 'Imagen o archivo';
-
-              // Necesitamos obtener el nombre del otro usuario
+              
+              // Timestamp a fecha legible (opcional, lógica simple)
+              // final Timestamp? timestamp = data['lastMessageTime'];
+              
               return FutureBuilder<DocumentSnapshot>(
                 future: FirebaseFirestore.instance.collection('users').doc(otherUserId).get(),
                 builder: (context, userSnapshot) {
                   if (!userSnapshot.hasData) return const SizedBox();
                   
                   final userData = userSnapshot.data!.data() as Map<String, dynamic>;
-                  final otherUserName = "${userData['nombre']} ${userData['apellidos']}";
+                  
+                  // CREAMOS EL MODELO AQUÍ
+                  final otherUser = UsuarioModel.fromMap(userData); 
 
                   return ListTile(
+                    contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                     leading: CircleAvatar(
+                      radius: 25,
                       backgroundColor: Colors.blue.shade100,
-                      child: Text(otherUserName[0].toUpperCase()),
+                      backgroundImage: (otherUser.fotoUrl != null && otherUser.fotoUrl!.isNotEmpty)
+                          ? NetworkImage(otherUser.fotoUrl!)
+                          : null,
+                      child: (otherUser.fotoUrl == null || otherUser.fotoUrl!.isEmpty)
+                          ? Text(otherUser.nombre[0].toUpperCase(), 
+                              style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold))
+                          : null,
                     ),
-                    title: Text(otherUserName, style: const TextStyle(fontWeight: FontWeight.bold)),
+                    title: Text(
+                      "${otherUser.nombre} ${otherUser.apellidos}", 
+                      style: const TextStyle(fontWeight: FontWeight.bold)
+                    ),
                     subtitle: Text(
                       lastMessage, 
                       maxLines: 1, 
-                      overflow: TextOverflow.ellipsis
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(color: Colors.grey[600]),
                     ),
                     onTap: () {
-                      // Navegar al chat individual
+                      // NAVEGAMOS PASANDO EL MODELO
                       Navigator.push(
                         context,
                         MaterialPageRoute(
                           builder: (context) => ChatScreen(
-                            receiverUserId: otherUserId,
-                            receiverUserEmail: otherUserName,
+                            targetUser: otherUser, // <--- Ahora pasamos el objeto
                           ),
                         ),
                       );

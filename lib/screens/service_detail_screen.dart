@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:project_servify/services/notification_service.dart';
 import 'package:project_servify/screens/chat_screen.dart';
+import 'package:project_servify/models/usuarios_model.dart';
 
 typedef ServiceData = Map<String, dynamic>;
 
@@ -72,8 +73,7 @@ class ServiceDetailScreen extends StatelessWidget {
     final providerId =
         serviceData['proveedor_id']; // ID necesario para notificación
     final serviceCategory = serviceData['categoria'] ?? 'Sin Categoría';
-    final fullDescription =
-        serviceData['descripcion_completa'] ??
+    final fullDescription = serviceData['descripcion_completa'] ??
         'No hay una descripción detallada disponible.';
     final serviceSchedule = serviceData['horario'] ?? 'Horario no especificado';
 
@@ -225,10 +225,25 @@ class ServiceDetailScreen extends StatelessWidget {
                       Navigator.push(
                         context,
                         MaterialPageRoute(
-                          builder: (context) => ChatScreen(
-                            receiverUserId: providerId,
-                            receiverUserEmail: providerName,
-                          ),
+                          builder: (context) {
+                            // CREAMOS UN MODELO TEMPORAL CON LA INFO QUE TENEMOS
+                            final providerUser = UsuarioModel(
+                              uid: providerId,
+                              nombre: providerName,
+                              apellidos:
+                                  '', // No tenemos el apellido aquí, lo dejamos vacío
+                              email: 'Proveedor', // Texto placeholder
+                              fotoUrl:
+                                  '', // Si tienes la foto en serviceData úsala, si no, vacía
+                              tipo: 'provider',
+                              telefono: '',
+                            );
+
+                            return ChatScreen(
+                              targetUser:
+                                  providerUser, // <--- AHORA PASAMOS EL OBJETO
+                            );
+                          },
                         ),
                       );
 

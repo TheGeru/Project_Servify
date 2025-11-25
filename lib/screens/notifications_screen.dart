@@ -3,6 +3,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:project_servify/services/notification_service.dart';
 import 'package:project_servify/screens/chat_screen.dart';
+import 'package:project_servify/models/usuarios_model.dart';
 
 class NotificationsScreen extends StatelessWidget {
   const NotificationsScreen({super.key});
@@ -71,9 +72,8 @@ class NotificationsScreen extends StatelessWidget {
               return ListTile(
                 tileColor: isRead ? Colors.white : Colors.blue.shade50,
                 leading: CircleAvatar(
-                  backgroundColor: isRead
-                      ? Colors.grey.shade300
-                      : const Color(0xFFFF6B35),
+                  backgroundColor:
+                      isRead ? Colors.grey.shade300 : const Color(0xFFFF6B35),
                   child: Icon(
                     Icons.notifications,
                     color: isRead ? Colors.grey : Colors.white,
@@ -112,24 +112,40 @@ class NotificationsScreen extends StatelessWidget {
                     notifications[index].reference.update({'read': true});
                   }
 
-                  if(data['type'] == 'chat_request' || data['type'] == 'contact_request') {
+                  if (data['type'] == 'chat_request' ||
+                      data['type'] == 'contact_request') {
                     // Navegar a la pantalla de chat
                     final metadata = data['metadata'] as Map<String, dynamic>?;
-                    final fromUserId = data['fromUserId']; // Fallback si no hay metadata
+                    final fromUserId =
+                        data['fromUserId']; // Fallback si no hay metadata
                     final fromUserName = data['fromUserName'];
 
                     // El ID del otro usuario es 'fromUserId' (quien envió la noti)
                     // O mejor, sácalo de metadata si lo guardaste ahí.
                     final partnerId = metadata?['chatPartnerId'] ?? fromUserId;
-                    final partnerName = metadata?['chatPartnerName'] ?? fromUserName;
+                    final partnerName =
+                        metadata?['chatPartnerName'] ?? fromUserName;
 
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (context) => ChatScreen(
-                          receiverUserEmail: partnerName,
-                          receiverUserId: partnerId,
-                        ),
+                        builder: (context) {
+                          // CREAMOS EL USUARIO BASADO EN LA NOTIFICACIÓN
+                          final notificationUser = UsuarioModel(
+                            uid: partnerId,
+                            nombre: partnerName,
+                            apellidos: '',
+                            email: '',
+                            fotoUrl: '',
+                            tipo:
+                                'user', // Asumimos user o provider, no afecta mucho al chat
+                            telefono: '',
+                          );
+
+                          return ChatScreen(
+                            targetUser: notificationUser, // <--- CORREGIDO
+                          );
+                        },
                       ),
                     );
                   }
