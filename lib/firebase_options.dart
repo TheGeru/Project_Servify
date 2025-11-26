@@ -41,48 +41,48 @@ class DefaultFirebaseOptions {
   }
 
   static const FirebaseOptions web = FirebaseOptions(
-    apiKey: 'AIzaSyBbQpvMg781SNQsJxTlr30yhySpZvqUJl0',
-    appId: '1:498006993645:web:da538875bf3255de1efae4',
-    messagingSenderId: '498006993645',
-    projectId: 'servify-app-4b50f',
-    authDomain: 'servify-app-4b50f.firebaseapp.com',
-    storageBucket: 'servify-app-4b50f.firebasestorage.app',
-    measurementId: 'G-TJTKGTVKQ0',
+    apiKey: 'AIzaSyBXNBy8nlRGgK4Hx-4geyAUl6xEUq1-eF4',
+    appId: '1:1036413462892:web:012073137327c104bdeb49',
+    messagingSenderId: '1036413462892',
+    projectId: 'servify-260124',
+    authDomain: 'servify-260124.firebaseapp.com',
+    storageBucket: 'servify-260124.firebasestorage.app',
   );
 
   static const FirebaseOptions android = FirebaseOptions(
-    apiKey: 'AIzaSyCYz4-NeR5h1RQs09unLLNMnv3Xewj0Vp0',
-    appId: '1:498006993645:android:ca2bef5f3e82d37f1efae4',
-    messagingSenderId: '498006993645',
-    projectId: 'servify-app-4b50f',
-    storageBucket: 'servify-app-4b50f.firebasestorage.app',
+    apiKey: 'AIzaSyD1-cDCUOaoWOIGzeA4-VITHwCGq_jFaQw',
+    appId: '1:1036413462892:android:ab8bc120c73d3b76bdeb49',
+    messagingSenderId: '1036413462892',
+    projectId: 'servify-260124',
+    storageBucket: 'servify-260124.firebasestorage.app',
   );
 
   static const FirebaseOptions ios = FirebaseOptions(
-    apiKey: 'AIzaSyDemmXlIcpTvJNDg3NGVDQe7Z4uGDaPvkY',
-    appId: '1:498006993645:ios:f225675ccaf84ba51efae4',
-    messagingSenderId: '498006993645',
-    projectId: 'servify-app-4b50f',
-    storageBucket: 'servify-app-4b50f.firebasestorage.app',
+    apiKey: 'AIzaSyDE20Ewc6VFaG1CRV1F1_vlMuWOYlWI4hQ',
+    appId: '1:1036413462892:ios:1ee5237f12f13c33bdeb49',
+    messagingSenderId: '1036413462892',
+    projectId: 'servify-260124',
+    storageBucket: 'servify-260124.firebasestorage.app',
+    iosClientId: '1036413462892-b2d00n5ikgn9aspet4anhf75fnsrond3.apps.googleusercontent.com',
     iosBundleId: 'com.example.projectServify',
   );
 
   static const FirebaseOptions macos = FirebaseOptions(
-    apiKey: 'AIzaSyDemmXlIcpTvJNDg3NGVDQe7Z4uGDaPvkY',
-    appId: '1:498006993645:ios:f225675ccaf84ba51efae4',
-    messagingSenderId: '498006993645',
-    projectId: 'servify-app-4b50f',
-    storageBucket: 'servify-app-4b50f.firebasestorage.app',
+    apiKey: 'AIzaSyDE20Ewc6VFaG1CRV1F1_vlMuWOYlWI4hQ',
+    appId: '1:1036413462892:ios:1ee5237f12f13c33bdeb49',
+    messagingSenderId: '1036413462892',
+    projectId: 'servify-260124',
+    storageBucket: 'servify-260124.firebasestorage.app',
+    iosClientId: '1036413462892-b2d00n5ikgn9aspet4anhf75fnsrond3.apps.googleusercontent.com',
     iosBundleId: 'com.example.projectServify',
   );
 
   static const FirebaseOptions windows = FirebaseOptions(
-    apiKey: 'AIzaSyBbQpvMg781SNQsJxTlr30yhySpZvqUJl0',
-    appId: '1:498006993645:web:9fa84a588fdb2a8e1efae4',
-    messagingSenderId: '498006993645',
-    projectId: 'servify-app-4b50f',
-    authDomain: 'servify-app-4b50f.firebaseapp.com',
-    storageBucket: 'servify-app-4b50f.firebasestorage.app',
-    measurementId: 'G-7FS7MQ9XLK',
+    apiKey: 'AIzaSyBXNBy8nlRGgK4Hx-4geyAUl6xEUq1-eF4',
+    appId: '1:1036413462892:web:ec4c471bda27ae01bdeb49',
+    messagingSenderId: '1036413462892',
+    projectId: 'servify-260124',
+    authDomain: 'servify-260124.firebaseapp.com',
+    storageBucket: 'servify-260124.firebasestorage.app',
   );
 }

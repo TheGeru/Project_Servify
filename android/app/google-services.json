@@ -1,26 +1,36 @@
 {
   "project_info": {
-    "project_number": "498006993645",
-    "project_id": "servify-app-4b50f",
-    "storage_bucket": "servify-app-4b50f.firebasestorage.app"
+    "project_number": "1036413462892",
+    "project_id": "servify-260124",
+    "storage_bucket": "servify-260124.firebasestorage.app"
   },
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:498006993645:android:ca2bef5f3e82d37f1efae4",
+        "mobilesdk_app_id": "1:1036413462892:android:ab8bc120c73d3b76bdeb49",
         "android_client_info": {
           "package_name": "com.example.project_servify"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "1036413462892-o6sgsmajls44ba6adfloekkaaadhes24.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
       "api_key": [
         {
-          "current_key": "AIzaSyCYz4-NeR5h1RQs09unLLNMnv3Xewj0Vp0"
+          "current_key": "AIzaSyD1-cDCUOaoWOIGzeA4-VITHwCGq_jFaQw"
         }
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": []
+          "other_platform_oauth_client": [
+            {
+              "client_id": "1036413462892-o6sgsmajls44ba6adfloekkaaadhes24.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
         }
       }
     }
